@@ -1,7 +1,6 @@
 export default function HeroSection() {
   return (
     <section id="anasayfa" className="relative bg-gradient-to-r from-primary to-blue-700 text-white py-20 lg:py-32">
-      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
       <div 
         className="absolute inset-0" 
         style={{
@@ -10,13 +9,14 @@ export default function HeroSection() {
           backgroundPosition: 'center'
         }}
       ></div>
+      <div className="absolute inset-0 bg-black bg-opacity-70"></div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6">
+          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-shadow-lg" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
             Profesyonel Tabela ve<br />
             <span className="text-accent">Reklam Çözümleri</span>
           </h1>
-          <p className="text-xl lg:text-2xl mb-8 text-gray-200 max-w-3xl mx-auto">
+          <p className="text-xl lg:text-2xl mb-8 text-gray-100 max-w-3xl mx-auto" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
             HD Reklam olarak, işletmenizin görünürlüğünü artıracak yüksek kaliteli tabela ve reklam ürünleri sunuyoruz.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
