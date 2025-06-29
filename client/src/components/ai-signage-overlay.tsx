@@ -32,12 +32,13 @@ export default function AISignageOverlay() {
       colors: string;
       building_description: string;
     }) => {
-      return await apiRequest("POST", "/api/ai-signage/generate", data);
+      const response = await apiRequest("POST", "/api/ai-signage/generate", data);
+      return await response.json();
     },
-    onSuccess: (response: any) => {
-      console.log("API Response:", response);
-      if (response.success && response.data && response.data.url) {
-        setProcessedImage(response.data.url);
+    onSuccess: (data: any) => {
+      console.log("API Response:", data);
+      if (data.success && data.data && data.data.url) {
+        setProcessedImage(data.data.url);
         toast({
           title: "Başarılı!",
           description: "AI tabela tasarımı oluşturuldu.",
@@ -58,7 +59,8 @@ export default function AISignageOverlay() {
 
   const analyzeImageMutation = useMutation({
     mutationFn: async (imageData: string) => {
-      return await apiRequest("POST", "/api/ai-signage/analyze", { image: imageData });
+      const response = await apiRequest("POST", "/api/ai-signage/analyze", { image: imageData });
+      return await response.json();
     },
     onSuccess: (data: any) => {
       setImageAnalysis(data.analysis);
