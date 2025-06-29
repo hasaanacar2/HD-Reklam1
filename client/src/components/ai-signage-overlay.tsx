@@ -4,26 +4,80 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { addSignageToImage } from "@/lib/image-processing";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AISignageOverlay() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [imageAnalysis, setImageAnalysis] = useState<string | null>(null);
   const [signageText, setSignageText] = useState("İŞLETME ADI");
   const [signageType, setSignageType] = useState("led");
-  const [signagePosition, setSignagePosition] = useState("top");
-  const [signageSize, setSignageSize] = useState(100);
+  const [signageStyle, setSignageStyle] = useState("modern");
+  const [signageColors, setSignageColors] = useState("professional");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const generateSignageMutation = useMutation({
+    mutationFn: async (data: {
+      text: string;
+      type: string;
+      style: string;
+      colors: string;
+      building_description: string;
+    }) => {
+      return await apiRequest("POST", "/api/ai-signage/generate", data);
+    },
+    onSuccess: (data: any) => {
+      setProcessedImage(data.data.url);
+      toast({
+        title: "Başarılı!",
+        description: "AI tabela tasarımı oluşturuldu.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Tabela tasarımı oluşturulurken hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const analyzeImageMutation = useMutation({
+    mutationFn: async (imageData: string) => {
+      return await apiRequest("POST", "/api/ai-signage/analyze", { image: imageData });
+    },
+    onSuccess: (data: any) => {
+      setImageAnalysis(data.analysis);
+      toast({
+        title: "Analiz Tamamlandı",
+        description: "Görsel analizi başarıyla yapıldı.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Görsel analizi yapılırken hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
+        const imageData = e.target?.result as string;
+        setUploadedImage(imageData);
         setProcessedImage(null);
+        setImageAnalysis(null);
+        
+        // Automatically analyze the uploaded image
+        analyzeImageMutation.mutate(imageData);
       };
       reader.readAsDataURL(file);
     } else {
@@ -41,8 +95,13 @@ export default function AISignageOverlay() {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
+        const imageData = e.target?.result as string;
+        setUploadedImage(imageData);
         setProcessedImage(null);
+        setImageAnalysis(null);
+        
+        // Automatically analyze the uploaded image
+        analyzeImageMutation.mutate(imageData);
       };
       reader.readAsDataURL(file);
     }
@@ -55,44 +114,35 @@ export default function AISignageOverlay() {
   const processImage = async () => {
     if (!uploadedImage) return;
 
-    setIsProcessing(true);
-    try {
-      const result = await addSignageToImage(uploadedImage, {
-        text: signageText,
-        type: signageType,
-        position: signagePosition,
-        size: signageSize
-      });
-      setProcessedImage(result);
-      toast({
-        title: "Başarılı!",
-        description: "AI tabela başarıyla eklendi.",
-      });
-    } catch (error) {
-      toast({
-        title: "Hata",
-        description: "Tabela eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    const buildingDescription = imageAnalysis || "commercial building facade";
+    
+    generateSignageMutation.mutate({
+      text: signageText,
+      type: signageType,
+      style: signageStyle,
+      colors: signageColors,
+      building_description: buildingDescription
+    });
   };
 
   const reset = () => {
     setUploadedImage(null);
     setProcessedImage(null);
+    setImageAnalysis(null);
     setSignageText("İŞLETME ADI");
     setSignageType("led");
-    setSignagePosition("top");
-    setSignageSize(100);
+    setSignageStyle("modern");
+    setSignageColors("professional");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   const shareToWhatsApp = () => {
-    const message = encodeURIComponent(`Merhaba HD Reklam, ${signageText} işletmem için ${signageType} tabela yapmak istiyorum. AI simülasyonu yaptım ve beğendim.`);
+    const typeText = signageType === 'led' ? 'LED' : 
+                     signageType === 'neon' ? 'Neon' : 
+                     signageType === 'lightbox' ? 'Işıklı Kutu Harf' : 'Dijital Baskı';
+    const message = encodeURIComponent(`Merhaba HD Reklam, ${signageText} işletmem için ${typeText} tabela yapmak istiyorum. AI tasarımını yaptırdım ve beğendim.`);
     window.open(`https://wa.me/905551234567?text=${message}`, '_blank');
   };
 
@@ -111,7 +161,7 @@ export default function AISignageOverlay() {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">AI Tabela Simülatörü</h2>
           <p className="text-xl text-secondary max-w-3xl mx-auto">
-            Yapay zeka teknolojisi ile işletmenizin fotoğrafı üzerine tabela ekleme simülasyonu yapın.
+            OpenAI yapay zeka teknolojisi ile işletmenizin fotoğrafını analiz edip, profesyonel tabela tasarımları oluşturun.
           </p>
         </div>
 
@@ -151,11 +201,11 @@ export default function AISignageOverlay() {
                   <div className="flex gap-3">
                     <Button 
                       onClick={processImage}
-                      disabled={isProcessing}
+                      disabled={generateSignageMutation.isPending}
                       className="bg-accent hover:bg-yellow-500 flex-1"
                     >
                       <i className="fas fa-magic mr-2"></i>
-                      {isProcessing ? "İşleniyor..." : "Tabela Ekle"}
+                      {generateSignageMutation.isPending ? "AI Tasarım Oluşturuluyor..." : "AI Tabela Tasarımı Oluştur"}
                     </Button>
                     <Button 
                       onClick={reset}
@@ -199,42 +249,56 @@ export default function AISignageOverlay() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="signagePosition">Konum</Label>
-                  <Select value={signagePosition} onValueChange={setSignagePosition}>
+                  <Label htmlFor="signageStyle">Tasarım Stili</Label>
+                  <Select value={signageStyle} onValueChange={setSignageStyle}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Konum seçin" />
+                      <SelectValue placeholder="Tasarım stili seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="top">Üst Kısım</SelectItem>
-                      <SelectItem value="center">Orta Kısım</SelectItem>
-                      <SelectItem value="bottom">Alt Kısım</SelectItem>
+                      <SelectItem value="modern">Modern</SelectItem>
+                      <SelectItem value="classic">Klasik</SelectItem>
+                      <SelectItem value="minimalist">Minimalist</SelectItem>
+                      <SelectItem value="bold">Cesur/Dikkat Çekici</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <Label htmlFor="signageSize">Boyut</Label>
-                  <input
-                    id="signageSize"
-                    type="range"
-                    min="50"
-                    max="200"
-                    value={signageSize}
-                    onChange={(e) => setSignageSize(Number(e.target.value))}
-                    className="w-full accent-primary"
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>Küçük</span>
-                    <span>Orta</span>
-                    <span>Büyük</span>
-                  </div>
+                  <Label htmlFor="signageColors">Renk Paleti</Label>
+                  <Select value={signageColors} onValueChange={setSignageColors}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Renk paleti seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">Profesyonel (Mavi/Beyaz)</SelectItem>
+                      <SelectItem value="warm">Sıcak Renkler (Kırmızı/Turuncu)</SelectItem>
+                      <SelectItem value="cool">Soğuk Renkler (Mavi/Yeşil)</SelectItem>
+                      <SelectItem value="bold">Canlı Renkler</SelectItem>
+                      <SelectItem value="monochrome">Siyah/Beyaz</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              {isProcessing && (
+              {/* Image Analysis */}
+              {imageAnalysis && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">AI Görsel Analizi</h4>
+                  <p className="text-gray-700 text-sm">{imageAnalysis}</p>
+                </div>
+              )}
+
+              {generateSignageMutation.isPending && (
                 <div className="mt-6 text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-gray-600">AI tabela ekleniyor...</p>
+                  <p className="text-gray-600">AI tabela tasarımı oluşturuluyor...</p>
+                </div>
+              )}
+
+              {analyzeImageMutation.isPending && (
+                <div className="mt-6 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-2"></div>
+                  <p className="text-gray-600 text-sm">Görsel analiz ediliyor...</p>
                 </div>
               )}
 
