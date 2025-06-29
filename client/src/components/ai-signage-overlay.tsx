@@ -34,14 +34,20 @@ export default function AISignageOverlay() {
     }) => {
       return await apiRequest("POST", "/api/ai-signage/generate", data);
     },
-    onSuccess: (data: any) => {
-      setProcessedImage(data.data.url);
-      toast({
-        title: "Başarılı!",
-        description: "AI tabela tasarımı oluşturuldu.",
-      });
+    onSuccess: (response: any) => {
+      console.log("API Response:", response);
+      if (response.success && response.data && response.data.url) {
+        setProcessedImage(response.data.url);
+        toast({
+          title: "Başarılı!",
+          description: "AI tabela tasarımı oluşturuldu.",
+        });
+      } else {
+        throw new Error("Invalid response format");
+      }
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Generation error:", error);
       toast({
         title: "Hata",
         description: "Tabela tasarımı oluşturulurken hata oluştu.",
