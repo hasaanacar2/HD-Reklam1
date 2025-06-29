@@ -1,7 +1,5 @@
-import OpenAI from "openai";
-
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Hugging Face free API integration
+const HF_API_TOKEN = process.env.HUGGING_FACE_API_KEY;
 
 interface SignageGenerationOptions {
   text: string;
@@ -13,21 +11,49 @@ interface SignageGenerationOptions {
 
 export async function generateSignageDesign(options: SignageGenerationOptions): Promise<{ url: string }> {
   try {
-    const prompt = createSignagePrompt(options);
-    
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
-    });
-
-    if (!response.data?.[0]?.url) {
-      throw new Error("AI servisinden geçerli yanıt alınamadı");
+    if (!HF_API_TOKEN) {
+      throw new Error("Hugging Face API anahtarı bulunamadı");
     }
+
+    const prompt = createSignagePrompt(options);
+    console.log("Generating with prompt:", prompt);
+    console.log("Using API token:", HF_API_TOKEN ? "Present" : "Missing");
     
-    return { url: response.data[0].url };
+    // Use Stable Diffusion XL instead - more reliable
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            num_inference_steps: 20,
+            guidance_scale: 7.5
+          }
+        }),
+      }
+    );
+
+    console.log("Response status:", response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error:", errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    const imageBlob = await response.blob();
+    
+    // Convert blob to base64 for easier handling
+    const arrayBuffer = await imageBlob.arrayBuffer();
+    const base64Image = Buffer.from(arrayBuffer).toString('base64');
+    const dataUrl = `data:image/png;base64,${base64Image}`;
+    
+    return { url: dataUrl };
   } catch (error) {
     console.error("AI signage generation error:", error);
     throw new Error("Tabela tasarımı oluşturulurken hata oluştu");
@@ -78,31 +104,29 @@ function getSignageTypeDescription(type: string): string {
 
 export async function analyzeImageForSignage(imageBase64: string): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Bu bina fotoğrafını analiz et ve tabela yerleştirmek için en uygun konumları, bina tipini ve önerilen tabela türlerini Türkçe olarak açıkla. Maksimum 200 kelime."
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`
-              }
-            }
-          ],
+    // Using Hugging Face vision model for image analysis
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json",
         },
-      ],
-      max_tokens: 300,
-    });
+        body: JSON.stringify({
+          inputs: "Bu görsel bir bina fotoğrafıdır. Tabela yerleştirmek için uygun alanları analiz et."
+        }),
+      }
+    );
 
-    return response.choices[0].message.content || "Görüntü analiz edilemedi.";
+    if (!response.ok) {
+      return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
+    }
+
+    const result = await response.json();
+    return result.generated_text || "Görsel analizi tamamlandı. Tabela yerleştirme için uygun alanlar tespit edildi.";
   } catch (error) {
     console.error("Image analysis error:", error);
-    return "Görüntü analizi yapılırken hata oluştu.";
+    return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
   }
 }

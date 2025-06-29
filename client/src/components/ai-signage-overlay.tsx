@@ -18,9 +18,37 @@ export default function AISignageOverlay() {
   const [signageType, setSignageType] = useState("led");
   const [signagePosition, setSignagePosition] = useState("top");
   const [signageSize, setSignageSize] = useState(100);
-  const [useAI, setUseAI] = useState(false);
+  const [signageStyle, setSignageStyle] = useState("modern");
+  const [signageColors, setSignageColors] = useState("professional");
+  const [useAI, setUseAI] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const generateSignageMutation = useMutation({
+    mutationFn: async (data: {
+      text: string;
+      type: string;
+      style: string;
+      colors: string;
+      building_description: string;
+    }) => {
+      return await apiRequest("POST", "/api/ai-signage/generate", data);
+    },
+    onSuccess: (data: any) => {
+      setProcessedImage(data.data.url);
+      toast({
+        title: "Başarılı!",
+        description: "AI tabela tasarımı oluşturuldu.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Tabela tasarımı oluşturulurken hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const analyzeImageMutation = useMutation({
     mutationFn: async (imageData: string) => {
@@ -87,27 +115,41 @@ export default function AISignageOverlay() {
   const processImage = async () => {
     if (!uploadedImage) return;
 
-    setIsProcessing(true);
-    try {
-      const result = await addSignageToImage(uploadedImage, {
+    if (useAI) {
+      // Use AI generation with Hugging Face
+      const buildingDescription = imageAnalysis || "commercial building facade";
+      
+      generateSignageMutation.mutate({
         text: signageText,
         type: signageType,
-        position: signagePosition,
-        size: signageSize
+        style: signageStyle,
+        colors: signageColors,
+        building_description: buildingDescription
       });
-      setProcessedImage(result);
-      toast({
-        title: "Başarılı!",
-        description: "Tabela başarıyla eklendi.",
-      });
-    } catch (error) {
-      toast({
-        title: "Hata",
-        description: "Tabela eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+    } else {
+      // Use canvas-based overlay
+      setIsProcessing(true);
+      try {
+        const result = await addSignageToImage(uploadedImage, {
+          text: signageText,
+          type: signageType,
+          position: signagePosition,
+          size: signageSize
+        });
+        setProcessedImage(result);
+        toast({
+          title: "Başarılı!",
+          description: "Tabela başarıyla eklendi.",
+        });
+      } catch (error) {
+        toast({
+          title: "Hata",
+          description: "Tabela eklenirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -147,7 +189,7 @@ export default function AISignageOverlay() {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">AI Tabela Simülatörü</h2>
           <p className="text-xl text-secondary max-w-3xl mx-auto">
-            OpenAI yapay zeka teknolojisi ile işletmenizin fotoğrafını analiz edip, profesyonel tabela tasarımları oluşturun.
+            Ücretsiz Hugging Face AI teknolojisi ile işletmenizin fotoğrafını analiz edip, profesyonel tabela tasarımları oluşturun.
           </p>
         </div>
 
@@ -187,11 +229,14 @@ export default function AISignageOverlay() {
                   <div className="flex gap-3">
                     <Button 
                       onClick={processImage}
-                      disabled={isProcessing}
+                      disabled={isProcessing || generateSignageMutation.isPending}
                       className="bg-accent hover:bg-yellow-500 flex-1"
                     >
                       <i className="fas fa-magic mr-2"></i>
-                      {isProcessing ? "Tabela Ekleniyor..." : "Tabela Ekle"}
+                      {isProcessing || generateSignageMutation.isPending ? 
+                        (useAI ? "AI Tasarım Oluşturuluyor..." : "Tabela Ekleniyor...") : 
+                        (useAI ? "AI Tabela Tasarımı Oluştur" : "Tabela Ekle")
+                      }
                     </Button>
                     <Button 
                       onClick={reset}
@@ -209,6 +254,20 @@ export default function AISignageOverlay() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
               
               <div className="space-y-6">
+                {/* AI Mode Toggle */}
+                <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="useAI"
+                    checked={useAI}
+                    onChange={(e) => setUseAI(e.target.checked)}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <label htmlFor="useAI" className="text-sm font-medium text-gray-700">
+                    🤖 Ücretsiz AI Tabela Tasarımı Kullan (Hugging Face)
+                  </label>
+                </div>
+
                 <div>
                   <Label htmlFor="signageText">Tabela Metni</Label>
                   <Input
@@ -234,37 +293,74 @@ export default function AISignageOverlay() {
                   </Select>
                 </div>
                 
-                <div>
-                  <Label htmlFor="signagePosition">Konum</Label>
-                  <Select value={signagePosition} onValueChange={setSignagePosition}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Konum seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="top">Üst Kısım</SelectItem>
-                      <SelectItem value="center">Orta Kısım</SelectItem>
-                      <SelectItem value="bottom">Alt Kısım</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="signageSize">Boyut</Label>
-                  <input
-                    id="signageSize"
-                    type="range"
-                    min="50"
-                    max="200"
-                    value={signageSize}
-                    onChange={(e) => setSignageSize(Number(e.target.value))}
-                    className="w-full accent-primary"
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>Küçük</span>
-                    <span>Orta</span>
-                    <span>Büyük</span>
-                  </div>
-                </div>
+                {useAI ? (
+                  <>
+                    <div>
+                      <Label htmlFor="signageStyle">Tasarım Stili</Label>
+                      <Select value={signageStyle} onValueChange={setSignageStyle}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Tasarım stili seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="modern">Modern</SelectItem>
+                          <SelectItem value="classic">Klasik</SelectItem>
+                          <SelectItem value="minimalist">Minimalist</SelectItem>
+                          <SelectItem value="bold">Cesur/Dikkat Çekici</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="signageColors">Renk Paleti</Label>
+                      <Select value={signageColors} onValueChange={setSignageColors}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Renk paleti seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="professional">Profesyonel (Mavi/Beyaz)</SelectItem>
+                          <SelectItem value="warm">Sıcak Renkler (Kırmızı/Turuncu)</SelectItem>
+                          <SelectItem value="cool">Soğuk Renkler (Mavi/Yeşil)</SelectItem>
+                          <SelectItem value="bold">Canlı Renkler</SelectItem>
+                          <SelectItem value="monochrome">Siyah/Beyaz</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="signagePosition">Konum</Label>
+                      <Select value={signagePosition} onValueChange={setSignagePosition}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Konum seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="top">Üst Kısım</SelectItem>
+                          <SelectItem value="center">Orta Kısım</SelectItem>
+                          <SelectItem value="bottom">Alt Kısım</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="signageSize">Boyut</Label>
+                      <input
+                        id="signageSize"
+                        type="range"
+                        min="50"
+                        max="200"
+                        value={signageSize}
+                        onChange={(e) => setSignageSize(Number(e.target.value))}
+                        className="w-full accent-primary"
+                      />
+                      <div className="flex justify-between text-sm text-gray-500 mt-1">
+                        <span>Küçük</span>
+                        <span>Orta</span>
+                        <span>Büyük</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Image Analysis */}
@@ -275,10 +371,12 @@ export default function AISignageOverlay() {
                 </div>
               )}
 
-              {isProcessing && (
+              {(isProcessing || generateSignageMutation.isPending) && (
                 <div className="mt-6 text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-gray-600">Tabela ekleniyor...</p>
+                  <p className="text-gray-600">
+                    {useAI ? "AI tabela tasarımı oluşturuluyor..." : "Tabela ekleniyor..."}
+                  </p>
                 </div>
               )}
 
