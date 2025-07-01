@@ -270,8 +270,18 @@ export default function AISignageOverlay() {
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                  <TabsTrigger value="form" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">📝 Form Doldur</TabsTrigger>
-                  <TabsTrigger value="reference" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">🖼️ Örnek Yükle</TabsTrigger>
+                  <TabsTrigger 
+                    value="form" 
+                    className="bg-gray-200 text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 hover:bg-gray-300 transition-colors"
+                  >
+                    📝 Form Doldur
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="reference" 
+                    className="bg-gray-200 text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 hover:bg-gray-300 transition-colors"
+                  >
+                    🖼️ Örnek Yükle
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="form" className="space-y-6 mt-6">
