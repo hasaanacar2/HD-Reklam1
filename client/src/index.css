@@ -220,8 +220,8 @@ button:hover {
     background: linear-gradient(135deg, hsl(0, 85%, 95%), hsl(25, 95%, 95%)) !important;
   }
 
-  /* Tab triggers için özel stil */
-  [data-radix-tabs-trigger] {
+  /* Tab triggers için özel stil - AI tabela bölümü */
+  #ai-tabela [data-radix-tabs-trigger] {
     background-color: white !important;
     border: 3px solid transparent !important;
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
@@ -235,13 +235,13 @@ button:hover {
     transition: all 0.3s ease !important;
   }
 
-  [data-radix-tabs-trigger][data-state="active"] {
+  #ai-tabela [data-radix-tabs-trigger][data-state="active"] {
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 90%, 60%), hsl(25, 100%, 58%)) !important;
     box-shadow: 0 0 0 4px rgba(220, 38, 127, 0.15) !important;
     transform: translateY(-1px) !important;
   }
 
-  [data-radix-tabs-trigger]:hover {
+  #ai-tabela [data-radix-tabs-trigger]:hover {
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 88%, 58%), hsl(25, 98%, 56%)) !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 0 0 2px rgba(220, 38, 127, 0.1) !important;
@@ -255,8 +255,8 @@ button:hover {
     display: block !important;
   }
 
-  /* Tabs list container için özel stil */
-  [data-radix-tabs-list] {
+  /* Tabs list container için özel stil - AI tabela bölümü */
+  #ai-tabela [data-radix-tabs-list] {
     background-color: white !important;
     border: 3px solid transparent !important;
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
