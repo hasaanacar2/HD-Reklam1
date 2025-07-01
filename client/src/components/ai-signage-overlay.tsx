@@ -104,7 +104,8 @@ export default function AISignageOverlay() {
 
     console.log("Original text:", signageText);
     console.log("Cleaned text:", cleanBusinessName);
-    console.log("Generated prompt:", englishPrompt);
+    console.log("Generated prompt (full):", englishPrompt);
+    console.log("Prompt length:", englishPrompt.length, "characters");
 
     generateSignageMutation.mutate({
       text: cleanBusinessName,

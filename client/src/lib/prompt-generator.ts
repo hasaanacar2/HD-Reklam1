@@ -148,7 +148,40 @@ export function generateAdvancedSignagePrompt(data: {
     }
   }
 
-  return `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${logoSpace}${contactElements} Mounted on ${buildingDescription}. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
+  const fullPrompt = `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${logoSpace}${contactElements} Mounted on ${buildingDescription}. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
+
+  // Promptu kısalt
+  return shortenPrompt(fullPrompt);
+}
+
+// Prompt kısaltma fonksiyonu - gereksiz detayları temizler
+export function shortenPrompt(prompt: string): string {
+  return prompt
+    // Tekrarlayan kelime gruplarını kısalt
+    .replace(/Shot during optimal lighting conditions, sharp focus, commercial photography quality\./g, 'Professional photo quality.')
+    .replace(/Turkish business environment, urban commercial setting, professional installation\./g, 'Turkish commercial setting.')
+    .replace(/High resolution, detailed texture, realistic materials and lighting effects\./g, 'High-res, realistic.')
+    .replace(/The signage should look realistic, properly installed, and dimensionally accurate\./g, 'Realistic installation.')
+    .replace(/Mounted on modern Turkish commercial building facade\./g, 'On modern building.')
+    // Uzun açıklamaları kısalt
+    .replace(/with bright LED backlighting, even illumination, and energy-efficient technology/g, 'with LED backlighting')
+    .replace(/with authentic neon tube lighting, vibrant glow effect, and classic glass tube appearance/g, 'with neon glow effect')
+    .replace(/with internal LED lighting, translucent face, and dimensional letter construction/g, 'with internal lighting')
+    .replace(/with high-resolution digital printing, weather-resistant materials, and vibrant color reproduction/g, 'with digital printing')
+    // Stil açıklamalarını kısalt
+    .replace(/modern, sleek design with clean lines and contemporary aesthetics/g, 'modern sleek design')
+    .replace(/classic, elegant design with timeless appeal and sophisticated look/g, 'classic elegant design')
+    .replace(/minimalist design with simple, clean elements and plenty of white space/g, 'minimalist clean design')
+    .replace(/bold, eye-catching design with strong visual impact and attention-grabbing elements/g, 'bold eye-catching design')
+    // Renk açıklamalarını kısalt
+    .replace(/professional blue and white color scheme with corporate appeal/g, 'professional blue-white colors')
+    .replace(/warm colors including red, orange, and yellow tones for inviting atmosphere/g, 'warm red-orange-yellow colors')
+    .replace(/cool colors with blue and green tones for calm and trustworthy appearance/g, 'cool blue-green colors')
+    .replace(/vibrant, bold colors with high contrast for maximum visual impact/g, 'vibrant high-contrast colors')
+    .replace(/elegant black and white monochrome design with sophisticated contrast/g, 'elegant black-white monochrome')
+    // Fazla boşlukları temizle
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Prompt validasyonu
