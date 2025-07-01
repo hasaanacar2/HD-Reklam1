@@ -169,18 +169,23 @@ button:hover {
   }
 }
 
-/* Form elemanları için kırmızı çerçeve ve beyaz arka plan */
+/* Form elemanları için kırmızı-turuncu geçişli çerçeve ve beyaz arka plan */
 @layer components {
   input, 
   textarea, 
   select,
   .form-control,
   [role="combobox"],
-  [data-radix-select-trigger] {
+  [data-radix-select-trigger],
+  button[role="combobox"] {
     background-color: white !important;
-    border: 2px solid hsl(0, 85%, 55%) !important;
-    border-radius: 8px !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border-radius: 10px !important;
     color: black !important;
+    padding: 12px 16px !important;
   }
 
   input:focus, 
@@ -188,25 +193,56 @@ button:hover {
   select:focus,
   .form-control:focus,
   [role="combobox"]:focus,
-  [data-radix-select-trigger]:focus {
-    border-color: hsl(0, 70%, 45%) !important;
-    box-shadow: 0 0 0 3px rgba(220, 38, 127, 0.1) !important;
+  [data-radix-select-trigger]:focus,
+  button[role="combobox"]:focus {
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 90%, 60%), hsl(25, 100%, 58%)) !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 127, 0.15) !important;
     outline: none !important;
   }
 
   /* Select dropdown içerikleri */
   [data-radix-select-content] {
     background-color: white !important;
-    border: 2px solid hsl(0, 85%, 55%) !important;
-    border-radius: 8px !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border-radius: 10px !important;
   }
 
   [data-radix-select-item] {
     background-color: white !important;
     color: black !important;
+    padding: 8px 12px !important;
   }
 
   [data-radix-select-item]:hover {
-    background-color: hsl(0, 85%, 95%) !important;
+    background: linear-gradient(135deg, hsl(0, 85%, 95%), hsl(25, 95%, 95%)) !important;
+  }
+
+  /* Tab triggers için özel stil */
+  [data-radix-tabs-trigger] {
+    background-color: white !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border-radius: 8px !important;
+    color: black !important;
+    padding: 10px 20px !important;
+    margin: 0 4px !important;
+  }
+
+  [data-radix-tabs-trigger][data-state="active"] {
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 90%, 60%), hsl(25, 100%, 58%)) !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 127, 0.2) !important;
+  }
+
+  /* Label stilleri */
+  label {
+    color: black !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    display: block !important;
   }
 }
