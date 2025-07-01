@@ -176,6 +176,11 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
 }
 
 function createSignagePrompt(options: SignageGenerationOptions): string {
+  // Eğer önceden hazırlanmış prompt varsa onu kullan (referans modu için)
+  if (options.prompt) {
+    return options.prompt;
+  }
+
   const basePrompt = `Create a professional signage design for a Turkish business with the following specifications:
 
 Business name/text: "${options.text}"
