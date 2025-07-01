@@ -7,13 +7,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { generateAdvancedSignagePrompt, validatePromptData, turkishToEnglish } from "@/lib/prompt-generator";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Textarea } from "./ui/textarea";
+import { Checkbox } from "./ui/checkbox";
+import { Loader2 } from "lucide-react";
 
 export default function AISignageOverlay() {
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [signageText, setSignageText] = useState("İŞLETME ADI");
+  const [signageText, setSignageText] = useState("");
   const [signageType, setSignageType] = useState("led");
   const [signageStyle, setSignageStyle] = useState("modern");
   const [signageColors, setSignageColors] = useState("professional");
+  const [customDescription, setCustomDescription] = useState("");
+  const [hasLogo, setHasLogo] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    phone: "",
+    website: "",
+    instagram: "",
+    facebook: ""
+  });
   const { toast } = useToast();
 
   const generateSignageMutation = useMutation({
@@ -81,11 +92,11 @@ export default function AISignageOverlay() {
 
     // Türkçe karakterleri düzeltilmiş işletme adını göster
     const cleanBusinessName = turkishToEnglish(signageText);
-    
+
     console.log("Original text:", signageText);
     console.log("Cleaned text:", cleanBusinessName);
     console.log("Generated prompt:", englishPrompt);
-    
+
     generateSignageMutation.mutate({
       text: cleanBusinessName,
       type: signageType,
@@ -98,21 +109,21 @@ export default function AISignageOverlay() {
   const shareToWhatsApp = () => {
     // Türkçe karakterleri düzeltilmiş işletme adını kullan
     const cleanBusinessName = turkishToEnglish(signageText);
-    
+
     const typeText = signageType === 'led' ? 'LED' : 
                      signageType === 'neon' ? 'Neon' : 
                      signageType === 'lightbox' ? 'Işıklı Kutu Harf' : 'Dijital Baskı';
-    
+
     const styleText = signageStyle === 'modern' ? 'Modern' :
                       signageStyle === 'classic' ? 'Klasik' :
                       signageStyle === 'minimalist' ? 'Minimalist' : 'Cesur';
-    
+
     const message = encodeURIComponent(
       `Merhaba HD Reklam, "${cleanBusinessName}" işletmem için ${typeText} tabela yapmak istiyorum. ` +
       `${styleText} tasarım stilinde AI tasarımını yaptırdım ve beğendim. ` +
       `Detaylı bilgi alabilir miyim?`
     );
-    
+
     window.open(`https://wa.me/905551234567?text=${message}`, '_blank');
   };
 
@@ -145,11 +156,11 @@ export default function AISignageOverlay() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            
+
             {/* Tabela Ayarları */}
             <div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
-              
+
               <div className="space-y-6">
                 <div>
                   <Label htmlFor="signageText">Tabela Metni</Label>
@@ -161,7 +172,7 @@ export default function AISignageOverlay() {
                     className="mt-2"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="signageType">Tabela Tipi</Label>
                   <Select value={signageType} onValueChange={setSignageType}>
@@ -176,7 +187,7 @@ export default function AISignageOverlay() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="signageStyle">Tasarım Stili</Label>
                   <Select value={signageStyle} onValueChange={setSignageStyle}>
@@ -191,7 +202,7 @@ export default function AISignageOverlay() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="signageColors">Renk Paleti</Label>
                   <Select value={signageColors} onValueChange={setSignageColors}>
@@ -206,6 +217,79 @@ export default function AISignageOverlay() {
                       <SelectItem value="monochrome">⚫ Siyah/Beyaz</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Özel Tasarım Açıklaması */}
+                <div className="space-y-2">
+                  <Label htmlFor="custom-description">Özel Tasarım Açıklaması (İsteğe Bağlı)</Label>
+                  <Textarea
+                    id="custom-description"
+                    placeholder="Özel isteklerinizi buraya yazabilirsiniz... (örn: vintage görünüm, metalik efekt)"
+                    value={customDescription}
+                    onChange={(e) => setCustomDescription(e.target.value)}
+                    maxLength={200}
+                    className="min-h-[80px]"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {customDescription.length}/200 karakter
+                  </p>
+                </div>
+
+                {/* Logo Seçeneği */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="has-logo"
+                    checked={hasLogo}
+                    onCheckedChange={setHasLogo}
+                  />
+                  <Label htmlFor="has-logo">Firma logosu için yer bırak</Label>
+                </div>
+
+                {/* İletişim Bilgileri */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">İletişim Bilgileri (İsteğe Bağlı)</Label>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="phone" className="text-sm">Telefon</Label>
+                      <Input
+                        id="phone"
+                        placeholder="0555 123 45 67"
+                        value={contactInfo.phone}
+                        onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="website" className="text-sm">Website</Label>
+                      <Input
+                        id="website"
+                        placeholder="www.sirket.com"
+                        value={contactInfo.website}
+                        onChange={(e) => setContactInfo(prev => ({ ...prev, website: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="instagram" className="text-sm">Instagram</Label>
+                      <Input
+                        id="instagram"
+                        placeholder="@sirketadi"
+                        value={contactInfo.instagram}
+                        onChange={(e) => setContactInfo(prev => ({ ...prev, instagram: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="facebook" className="text-sm">Facebook</Label>
+                      <Input
+                        id="facebook"
+                        placeholder="Şirket Sayfası"
+                        value={contactInfo.facebook}
+                        onChange={(e) => setContactInfo(prev => ({ ...prev, facebook: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-4">
@@ -238,7 +322,7 @@ export default function AISignageOverlay() {
             {/* Sonuç Alanı */}
             <div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">AI Tabela Tasarımı</h3>
-              
+
               {!generatedImage && !generateSignageMutation.isPending && (
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
                   <div className="text-6xl mb-4">🎨</div>

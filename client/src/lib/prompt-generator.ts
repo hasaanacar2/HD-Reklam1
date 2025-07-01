@@ -57,6 +57,14 @@ export function generateSignagePrompt(data: {
   style: string;
   colors: string;
   building_description?: string;
+  custom_description?: string;
+  has_logo?: boolean;
+  contact_info?: {
+    phone?: string;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+  };
 }): string {
   // İşletme adındaki Türkçe karakterleri düzelt
   const businessName = turkishToEnglish(data.text);
@@ -86,6 +94,14 @@ export function generateAdvancedSignagePrompt(data: {
   style: string;
   colors: string;
   building_description?: string;
+  custom_description?: string;
+  has_logo?: boolean;
+  contact_info?: {
+    phone?: string;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+  };
 }): string {
   const businessName = turkishToEnglish(data.text);
   const typeDesc = getSignageTypeDescription(data.type);
@@ -109,10 +125,36 @@ export function generateAdvancedSignagePrompt(data: {
       break;
   }
 
+  // Özel tasarım açıklaması ekleme
+  let customDesignText = '';
+  if (data.custom_description && data.custom_description.trim()) {
+    customDesignText = `Special design requirements: ${data.custom_description}. `;
+  }
+
+  // Logo dahil etme
+  let logoText = '';
+  if (data.has_logo) {
+    logoText = 'Include space for company logo alongside the business name. ';
+  }
+
+  // İletişim bilgileri ekleme
+  let contactText = '';
+  if (data.contact_info) {
+    const contacts = [];
+    if (data.contact_info.phone) contacts.push('phone number');
+    if (data.contact_info.website) contacts.push('website URL');
+    if (data.contact_info.instagram) contacts.push('Instagram handle');
+    if (data.contact_info.facebook) contacts.push('Facebook page');
+    
+    if (contacts.length > 0) {
+      contactText = `Include contact information displaying ${contacts.join(', ')} in smaller text below the main business name. `;
+    }
+  }
+
   const prompt = `Professional commercial signage photograph showing ${typeDesc} ${specificDetails}. 
 Business name: "${businessName}" prominently displayed with ${styleDesc}. 
 Color scheme: ${colorDesc}. 
-Mounted on ${data.building_description || 'modern commercial building exterior'}. 
+${customDesignText}${logoText}${contactText}Mounted on ${data.building_description || 'modern commercial building exterior'}. 
 Shot during optimal lighting conditions, sharp focus, commercial photography quality. 
 The signage should look realistic, properly installed, and dimensionally accurate. 
 Turkish business environment, urban commercial setting, professional installation. 
@@ -127,6 +169,13 @@ export function validatePromptData(data: {
   type: string;
   style: string;
   colors: string;
+  custom_description?: string;
+  contact_info?: {
+    phone?: string;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+  };
 }): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
@@ -151,6 +200,27 @@ export function validatePromptData(data: {
   const validColors = ['professional', 'warm', 'cool', 'bold', 'monochrome'];
   if (!validColors.includes(data.colors)) {
     errors.push('Geçersiz renk paleti');
+  }
+
+  // Özel açıklama validasyonu
+  if (data.custom_description && data.custom_description.length > 200) {
+    errors.push('Özel tasarım açıklaması çok uzun (maksimum 200 karakter)');
+  }
+
+  // İletişim bilgileri validasyonu
+  if (data.contact_info) {
+    if (data.contact_info.phone && data.contact_info.phone.length > 20) {
+      errors.push('Telefon numarası çok uzun');
+    }
+    if (data.contact_info.website && data.contact_info.website.length > 50) {
+      errors.push('Website adresi çok uzun');
+    }
+    if (data.contact_info.instagram && data.contact_info.instagram.length > 30) {
+      errors.push('Instagram kullanıcı adı çok uzun');
+    }
+    if (data.contact_info.facebook && data.contact_info.facebook.length > 50) {
+      errors.push('Facebook sayfa adı çok uzun');
+    }
   }
 
   return {

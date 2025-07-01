@@ -8,6 +8,14 @@ interface SignageGenerationOptions {
   colors: string;
   building_description: string;
   prompt?: string; // Önceden oluşturulmuş prompt
+  custom_description?: string;
+  has_logo?: boolean;
+  contact_info?: {
+    phone?: string;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+  };
 }
 
 // Test function for Gemini connection
