@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { generateAdvancedSignagePrompt, validatePromptData, turkishToEnglish } from "@/lib/prompt-generator";
 
 export default function AISignageOverlay() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -21,10 +22,15 @@ export default function AISignageOverlay() {
       type: string;
       style: string;
       colors: string;
+      prompt?: string;
     }) => {
       const response = await apiRequest("POST", "/api/ai-signage/generate", {
-        ...data,
-        building_description: "professional commercial setting"
+        text: data.text,
+        type: data.type,
+        style: data.style,
+        colors: data.colors,
+        building_description: "modern Turkish commercial building facade",
+        prompt: data.prompt
       });
       return await response.json();
     },
@@ -47,28 +53,66 @@ export default function AISignageOverlay() {
   });
 
   const generateSignage = () => {
-    if (!signageText.trim()) {
-      toast({
-        title: "Hata",
-        description: "Lütfen tabela metni girin.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    generateSignageMutation.mutate({
+    // Form verilerini validate et
+    const validation = validatePromptData({
       text: signageText,
       type: signageType,
       style: signageStyle,
       colors: signageColors
     });
+
+    if (!validation.isValid) {
+      toast({
+        title: "Hata",
+        description: validation.errors.join(', '),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Gelişmiş İngilizce prompt oluştur
+    const englishPrompt = generateAdvancedSignagePrompt({
+      text: signageText,
+      type: signageType,
+      style: signageStyle,
+      colors: signageColors,
+      building_description: "modern Turkish commercial building facade"
+    });
+
+    // Türkçe karakterleri düzeltilmiş işletme adını göster
+    const cleanBusinessName = turkishToEnglish(signageText);
+    
+    console.log("Original text:", signageText);
+    console.log("Cleaned text:", cleanBusinessName);
+    console.log("Generated prompt:", englishPrompt);
+    
+    generateSignageMutation.mutate({
+      text: cleanBusinessName,
+      type: signageType,
+      style: signageStyle,
+      colors: signageColors,
+      prompt: englishPrompt
+    } as any);
   };
 
   const shareToWhatsApp = () => {
+    // Türkçe karakterleri düzeltilmiş işletme adını kullan
+    const cleanBusinessName = turkishToEnglish(signageText);
+    
     const typeText = signageType === 'led' ? 'LED' : 
                      signageType === 'neon' ? 'Neon' : 
                      signageType === 'lightbox' ? 'Işıklı Kutu Harf' : 'Dijital Baskı';
-    const message = encodeURIComponent(`Merhaba HD Reklam, ${signageText} işletmem için ${typeText} tabela yapmak istiyorum. AI tasarımını yaptırdım ve beğendim.`);
+    
+    const styleText = signageStyle === 'modern' ? 'Modern' :
+                      signageStyle === 'classic' ? 'Klasik' :
+                      signageStyle === 'minimalist' ? 'Minimalist' : 'Cesur';
+    
+    const message = encodeURIComponent(
+      `Merhaba HD Reklam, "${cleanBusinessName}" işletmem için ${typeText} tabela yapmak istiyorum. ` +
+      `${styleText} tasarım stilinde AI tasarımını yaptırdım ve beğendim. ` +
+      `Detaylı bilgi alabilir miyim?`
+    );
+    
     window.open(`https://wa.me/905551234567?text=${message}`, '_blank');
   };
 

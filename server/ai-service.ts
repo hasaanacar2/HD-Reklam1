@@ -7,6 +7,7 @@ interface SignageGenerationOptions {
   style: string;
   colors: string;
   building_description: string;
+  prompt?: string; // Önceden oluşturulmuş prompt
 }
 
 export async function generateSignageDesign(options: SignageGenerationOptions): Promise<{ url: string }> {
@@ -15,7 +16,8 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       throw new Error("Hugging Face API anahtarı bulunamadı");
     }
 
-    const prompt = createSignagePrompt(options);
+    // Eğer frontend'den hazır prompt gelirse onu kullan, yoksa yeni oluştur
+    const prompt = options.prompt || createSignagePrompt(options);
     console.log("Generating with prompt:", prompt);
     console.log("Using API token:", HF_API_TOKEN ? "Present" : "Missing");
     

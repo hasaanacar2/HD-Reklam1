@@ -97,7 +97,12 @@ A unique feature that allows customers to:
 - Replit-specific configuration for cloud deployment
 
 ## Changelog
-- June 29, 2025. Initial setup
+- July 1, 2025: Enhanced AI prompt generation system
+  - Added advanced Turkish-to-English character conversion
+  - Implemented intelligent prompt generation for signage designs
+  - Added form validation and error handling
+  - Enhanced WhatsApp integration with cleaner business names
+- June 29, 2025: Initial setup
 
 ## User Preferences
 
