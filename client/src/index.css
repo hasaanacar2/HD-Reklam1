@@ -49,6 +49,17 @@
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
 }
+
+/* Custom thin border styles */
+.thin-border {
+  border: 0.5px solid #d1d5db !important;
+}
+
+.thin-border:focus {
+  border-color: #9ca3af !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
 button {
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: var(--primary-foreground);
