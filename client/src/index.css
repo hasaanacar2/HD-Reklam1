@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 20%, 8%); /* Koyu kırmızımsı siyah */
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(0, 15%, 12%);
-  --muted-foreground: hsl(0, 5%, 65%);
-  --popover: hsl(0, 20%, 8%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(0, 18%, 10%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(0, 15%, 20%);
-  --input: hsl(0, 15%, 20%);
+  --background: hsl(0, 0%, 100%); /* Beyaz arka plan */
+  --foreground: hsl(0, 0%, 3.9%); /* Koyu metin */
+  --muted: hsl(0, 0%, 96.1%);
+  --muted-foreground: hsl(0, 0%, 45.1%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(0, 0%, 3.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(0, 0%, 3.9%);
+  --border: hsl(0, 0%, 89.8%); /* Açık gri border */
+  --input: hsl(0, 0%, 100%); /* Beyaz input arka planı */
   --primary: hsl(0, 85%, 55%); /* Parlak kırmızı */
   --primary-foreground: hsl(0, 0%, 98%);
-  --secondary: hsl(15, 25%, 15%);
-  --secondary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(0, 0%, 96.1%);
+  --secondary-foreground: hsl(0, 0%, 9%);
   --accent: hsl(0, 95%, 53%); /* Kırmızımsı turuncu */
-  --accent-foreground: hsl(0, 20%, 8%);
+  --accent-foreground: hsl(0, 0%, 9%);
   --success: hsl(142, 76%, 36%);
   --success-foreground: hsl(355, 7%, 97%);
   --destructive: hsl(0, 75%, 45%);
@@ -66,12 +66,12 @@ button:hover {
 }
 
 .card {
-  background: linear-gradient(145deg, var(--card), hsl(0, 25%, 5%));
+  background: var(--card);
   border: 1px solid var(--border);
   color: var(--card-foreground);
   border-radius: var(--radius);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(139, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
