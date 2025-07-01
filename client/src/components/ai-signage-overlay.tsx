@@ -25,6 +25,7 @@ export default function AISignageOverlay() {
     instagram: "",
     facebook: ""
   });
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const generateSignageMutation = useMutation({
@@ -87,7 +88,15 @@ export default function AISignageOverlay() {
       type: signageType,
       style: signageStyle,
       colors: signageColors,
-      building_description: "modern Turkish commercial building facade"
+      building_description: "modern Turkish commercial building facade",
+      customDescription: customDescription.trim() || undefined,
+      hasLogo: hasLogo,
+      contactInfo: {
+        phone: contactInfo.phone.trim() || undefined,
+        website: contactInfo.website.trim() || undefined,
+        instagram: contactInfo.instagram.trim() || undefined,
+        facebook: contactInfo.facebook.trim() || undefined
+      }
     });
 
     // Türkçe karakterleri düzeltilmiş işletme adını göster

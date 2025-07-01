@@ -68,7 +68,7 @@ export function generateSignagePrompt(data: {
 }): string {
   // İşletme adındaki Türkçe karakterleri düzelt
   const businessName = turkishToEnglish(data.text);
-  
+
   // Bileşenleri al
   const typeDesc = getSignageTypeDescription(data.type);
   const styleDesc = getStyleDescription(data.style);
@@ -94,9 +94,9 @@ export function generateAdvancedSignagePrompt(data: {
   style: string;
   colors: string;
   building_description?: string;
-  custom_description?: string;
-  has_logo?: boolean;
-  contact_info?: {
+  customDescription?: string;
+  hasLogo?: boolean;
+  contactInfo?: {
     phone?: string;
     website?: string;
     instagram?: string;
@@ -104,11 +104,12 @@ export function generateAdvancedSignagePrompt(data: {
   };
 }): string {
   const businessName = turkishToEnglish(data.text);
-  const typeDesc = getSignageTypeDescription(data.type);
-  const styleDesc = getStyleDescription(data.style);
-  const colorDesc = getColorDescription(data.colors);
-  
-  // Tabela tipine göre özel detaylar ekle
+  const typeDescription = getSignageTypeDescription(data.type);
+  const styleDescription = getStyleDescription(data.style);
+  const colorDescription = getColorDescription(data.colors);
+  const buildingDescription = data.building_description || 'modern commercial building exterior';
+
+  // Specific details based on type
   let specificDetails = '';
   switch (data.type) {
     case 'led':
@@ -123,44 +124,31 @@ export function generateAdvancedSignagePrompt(data: {
     case 'digital':
       specificDetails = 'with high-resolution digital printing, weather-resistant materials, and vibrant color reproduction';
       break;
+    default:
+      specificDetails = 'with professional lighting and modern construction';
   }
 
-  // Özel tasarım açıklaması ekleme
-  let customDesignText = '';
-  if (data.custom_description && data.custom_description.trim()) {
-    customDesignText = `Special design requirements: ${data.custom_description}. `;
-  }
+  // Add custom description if provided
+  const customElements = data.customDescription ? ` Additional design elements: ${data.customDescription}.` : '';
 
-  // Logo dahil etme
-  let logoText = '';
-  if (data.has_logo) {
-    logoText = 'Include space for company logo alongside the business name. ';
-  }
+  // Add logo space if requested
+  const logoSpace = data.hasLogo ? ' Design includes designated space for company logo placement.' : '';
 
-  // İletişim bilgileri ekleme
-  let contactText = '';
-  if (data.contact_info) {
+  // Add contact information if provided
+  let contactElements = '';
+  if (data.contactInfo) {
     const contacts = [];
-    if (data.contact_info.phone) contacts.push('phone number');
-    if (data.contact_info.website) contacts.push('website URL');
-    if (data.contact_info.instagram) contacts.push('Instagram handle');
-    if (data.contact_info.facebook) contacts.push('Facebook page');
-    
+    if (data.contactInfo.phone) contacts.push(`phone: ${data.contactInfo.phone}`);
+    if (data.contactInfo.website) contacts.push(`website: ${data.contactInfo.website}`);
+    if (data.contactInfo.instagram) contacts.push(`Instagram: ${data.contactInfo.instagram}`);
+    if (data.contactInfo.facebook) contacts.push(`Facebook: ${data.contactInfo.facebook}`);
+
     if (contacts.length > 0) {
-      contactText = `Include contact information displaying ${contacts.join(', ')} in smaller text below the main business name. `;
+      contactElements = ` Contact information displayed: ${contacts.join(', ')}.`;
     }
   }
 
-  const prompt = `Professional commercial signage photograph showing ${typeDesc} ${specificDetails}. 
-Business name: "${businessName}" prominently displayed with ${styleDesc}. 
-Color scheme: ${colorDesc}. 
-${customDesignText}${logoText}${contactText}Mounted on ${data.building_description || 'modern commercial building exterior'}. 
-Shot during optimal lighting conditions, sharp focus, commercial photography quality. 
-The signage should look realistic, properly installed, and dimensionally accurate. 
-Turkish business environment, urban commercial setting, professional installation. 
-High resolution, detailed texture, realistic materials and lighting effects.`;
-
-  return prompt.replace(/\s+/g, ' ').trim();
+  return `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${logoSpace}${contactElements} Mounted on ${buildingDescription}. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
 }
 
 // Prompt validasyonu
