@@ -13,8 +13,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-primary">HD Reklam</h1>
+              <div className="flex-shrink-0 flex items-center space-x-3">
+                <img 
+                  src="/attached_assets/0f7a3145-8b08-4199-ab65-9f33bf21adc9_1751381993745.jpeg" 
+                  alt="HD Reklam Logo" 
+                  className="h-12 w-auto"
+                />
+                <h1 className="text-3xl font-bold gradient-text brand-font">HD Reklam</h1>
               </div>
             </div>
             <div className="hidden md:block">
@@ -93,7 +98,14 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-6">HD Reklam</h3>
+              <div className="flex items-center space-x-3 mb-6">
+                <img 
+                  src="/attached_assets/0f7a3145-8b08-4199-ab65-9f33bf21adc9_1751381993745.jpeg" 
+                  alt="HD Reklam Logo" 
+                  className="h-10 w-auto"
+                />
+                <h3 className="text-2xl font-bold text-white brand-font">HD Reklam</h3>
+              </div>
               <p className="text-gray-300 mb-4">
                 Profesyonel tabela ve reklam çözümleri ile işletmenizin görünürlüğünü artırıyoruz.
               </p>

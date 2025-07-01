@@ -12,7 +12,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black bg-opacity-70"></div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-shadow-lg" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-shadow-lg heading-font" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
             Profesyonel Tabela ve<br />
             <span className="text-accent">Reklam Çözümleri</span>
           </h1>
