@@ -272,24 +272,28 @@ export default function AISignageOverlay() {
                 <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
                   <TabsTrigger 
                     value="form" 
-                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-red-500 data-[state=inactive]:to-orange-500 transition-all duration-200"
+                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md transition-all duration-200"
                     style={{
                       background: activeTab === 'form' 
                         ? 'white' 
                         : 'linear-gradient(to right, #ef4444, #f97316)',
-                      color: activeTab === 'form' ? '#1f2937' : 'white'
+                      color: activeTab === 'form' ? '#1f2937' : 'white',
+                      border: activeTab === 'form' ? '2px solid #e5e7eb' : 'none',
+                      boxShadow: activeTab === 'form' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
                     }}
                   >
                     📝 Form Doldur
                   </TabsTrigger>
                   <TabsTrigger 
                     value="reference" 
-                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-red-500 data-[state=inactive]:to-orange-500 transition-all duration-200"
+                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md transition-all duration-200"
                     style={{
                       background: activeTab === 'reference' 
                         ? 'white' 
                         : 'linear-gradient(to right, #ef4444, #f97316)',
-                      color: activeTab === 'reference' ? '#1f2937' : 'white'
+                      color: activeTab === 'reference' ? '#1f2937' : 'white',
+                      border: activeTab === 'reference' ? '2px solid #e5e7eb' : 'none',
+                      boxShadow: activeTab === 'reference' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
                     }}
                   >
                     🖼️ Örnek Yükle
