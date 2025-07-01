@@ -245,4 +245,16 @@ button:hover {
     margin-bottom: 8px !important;
     display: block !important;
   }
+
+  /* Tabs list container için özel stil */
+  [data-radix-tabs-list] {
+    background-color: white !important;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border-radius: 12px !important;
+    padding: 6px !important;
+    margin-bottom: 16px !important;
+  }
 }
