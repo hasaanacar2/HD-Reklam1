@@ -1,6 +1,6 @@
 export default function HeroSection() {
   return (
-    <section id="anasayfa" className="relative bg-gradient-to-r from-primary to-blue-700 text-white py-20 lg:py-32">
+    <section id="anasayfa" className="relative bg-gradient-to-r from-primary to-red-800 text-white py-20 lg:py-32">
       <div 
         className="absolute inset-0" 
         style={{
@@ -22,14 +22,14 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
               href="#ai-tabela" 
-              className="bg-accent hover:bg-yellow-500 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 hover:transform hover:scale-105 inline-flex items-center justify-center"
+              className="bg-accent hover:bg-orange-500 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 hover:transform hover:scale-105 inline-flex items-center justify-center shadow-lg"
             >
               <i className="fas fa-robot mr-2"></i>
               AI Tabela Dene
             </a>
             <a 
               href="https://wa.me/905551234567?text=Merhaba%20HD%20Reklam,%20tabela%20hizmetleriniz%20hakkında%20bilgi%20almak%20istiyorum." 
-              className="bg-transparent border-2 border-white hover:bg-white hover:text-primary text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 inline-flex items-center justify-center"
+              className="bg-transparent border-2 border-white hover:bg-white hover:text-red-800 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 inline-flex items-center justify-center shadow-lg"
             >
               <i className="fab fa-whatsapp mr-2"></i>
               WhatsApp İletişim

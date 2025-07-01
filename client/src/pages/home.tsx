@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
-      <nav className="bg-white shadow-lg sticky top-0 z-40">
+      <nav className="bg-gradient-to-r from-red-900 to-red-950 shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -24,15 +24,15 @@ export default function Home() {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="#anasayfa" className="text-secondary hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Ana Sayfa</a>
-                <a href="#hizmetler" className="text-secondary hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Hizmetler</a>
-                <a href="#ai-tabela" className="text-secondary hover:text-primary px-3 py-2 text-sm font-medium transition-colors">AI Tabela</a>
-                <a href="#galeri" className="text-secondary hover:text-primary px-3 py-2 text-sm font-medium transition-colors">Galeri</a>
-                <a href="#iletisim" className="text-secondary hover:text-primary px-3 py-2 text-sm font-medium transition-colors">İletişim</a>
+                <a href="#anasayfa" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Ana Sayfa</a>
+                <a href="#hizmetler" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Hizmetler</a>
+                <a href="#ai-tabela" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">AI Tabela</a>
+                <a href="#galeri" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Galeri</a>
+                <a href="#iletisim" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">İletişim</a>
               </div>
             </div>
             <div className="md:hidden">
-              <button className="text-secondary hover:text-primary">
+              <button className="text-white hover:text-accent">
                 <i className="fas fa-bars text-xl"></i>
               </button>
             </div>
@@ -46,11 +46,11 @@ export default function Home() {
       <PortfolioSection />
       
       {/* Why Choose Us Section */}
-      <section className="py-20 bg-gradient-to-br from-primary to-blue-700 text-white">
+      <section className="py-20 bg-gradient-to-br from-primary to-red-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Neden HD Reklam?</h2>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-red-100 max-w-3xl mx-auto"></p>
               15 yıllık deneyimimiz ve modern teknolojimizle sektörde öncüyüz.
             </p>
           </div>
@@ -61,7 +61,7 @@ export default function Home() {
                 <i className="fas fa-award text-3xl text-accent"></i>
               </div>
               <h3 className="text-xl font-semibold mb-3">15 Yıl Deneyim</h3>
-              <p className="text-blue-100">Sektörde 15 yıllık tecrübemizle binlerce projeyi başarıyla tamamladık.</p>
+              <p className="text-red-100">Sektörde 15 yıllık tecrübemizle binlerce projeyi başarıyla tamamladık.</p>
             </div>
 
             <div className="text-center">
@@ -69,7 +69,7 @@ export default function Home() {
                 <i className="fas fa-tools text-3xl text-accent"></i>
               </div>
               <h3 className="text-xl font-semibold mb-3">Modern Teknoloji</h3>
-              <p className="text-blue-100">Son teknoloji makineler ve yöntemlerle en kaliteli ürünleri üretiyoruz.</p>
+              <p className="text-red-100">Son teknoloji makineler ve yöntemlerle en kaliteli ürünleri üretiyoruz.</p>
             </div>
 
             <div className="text-center">
@@ -77,7 +77,7 @@ export default function Home() {
                 <i className="fas fa-clock text-3xl text-accent"></i>
               </div>
               <h3 className="text-xl font-semibold mb-3">Hızlı Teslimat</h3>
-              <p className="text-blue-100">Projelerinizi zamanında teslim etme konusunda %100 başarı oranımız var.</p>
+              <p className="text-red-100">Projelerinizi zamanında teslim etme konusunda %100 başarı oranımız var.</p>
             </div>
 
             <div className="text-center">
@@ -85,7 +85,7 @@ export default function Home() {
                 <i className="fas fa-headset text-3xl text-accent"></i>
               </div>
               <h3 className="text-xl font-semibold mb-3">7/24 Destek</h3>
-              <p className="text-blue-100">Montaj sonrası 7/24 teknik destek ve bakım hizmeti sunuyoruz.</p>
+              <p className="text-red-100">Montaj sonrası 7/24 teknik destek ve bakım hizmesi sunuyoruz.</p>
             </div>
           </div>
         </div>
