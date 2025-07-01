@@ -131,8 +131,11 @@ export function generateAdvancedSignagePrompt(data: {
   // Add custom description if provided
   const customElements = data.customDescription ? ` Additional design elements: ${data.customDescription}.` : '';
 
-  // Add logo space if requested
-  const logoSpace = data.hasLogo ? ' Design includes designated space for company logo placement.' : '';
+  // Logo alanı ekle
+  let logoSpace = '';
+  if (data.hasLogo) {
+    logoSpace = ' Design must include a prominent EMPTY rectangular space reserved specifically for company logo placement. This logo area should be clearly visible, well-positioned, and proportionally sized for easy logo integration.';
+  }
 
   // Add contact information if provided
   let contactElements = '';
@@ -148,7 +151,10 @@ export function generateAdvancedSignagePrompt(data: {
     }
   }
 
-  const fullPrompt = `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${logoSpace}${contactElements} Mounted on ${buildingDescription}. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
+  let fullPrompt = `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${logoSpace}${contactElements} Mounted on ${buildingDescription}. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
+  if (data.hasLogo) {
+    fullPrompt = `Professional commercial signage photograph showing ${typeDescription} ${specificDetails}. Business name: "${businessName}" prominently displayed with ${styleDescription}. Color scheme: ${colorDescription}.${customElements}${contactElements} Mounted on ${buildingDescription}. IMPORTANT: Include a clearly visible empty rectangular area specifically reserved for logo placement - this space should be obvious and well-integrated into the design. Shot during optimal lighting conditions, sharp focus, commercial photography quality. The signage should look realistic, properly installed, and dimensionally accurate. Turkish business environment, urban commercial setting, professional installation. High resolution, detailed texture, realistic materials and lighting effects.`;
+  }
 
   // Promptu kısalt
   return shortenPrompt(fullPrompt);
