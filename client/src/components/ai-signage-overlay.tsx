@@ -308,14 +308,14 @@ export default function AISignageOverlay() {
                       value={signageText}
                       onChange={(e) => setSignageText(e.target.value)}
                       placeholder="İşletmenizin adını girin"
-                      className="mt-2"
+                      className="mt-2 border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="signageType">Tabela Tipi</Label>
                     <Select value={signageType} onValueChange={setSignageType}>
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none">
                         <SelectValue placeholder="Tabela tipi seçin" />
                       </SelectTrigger>
                       <SelectContent>
@@ -330,7 +330,7 @@ export default function AISignageOverlay() {
                   <div>
                     <Label htmlFor="signageStyle">Tasarım Stili</Label>
                     <Select value={signageStyle} onValueChange={setSignageStyle}>
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none">
                         <SelectValue placeholder="Tasarım stili seçin" />
                       </SelectTrigger>
                       <SelectContent>
@@ -345,7 +345,7 @@ export default function AISignageOverlay() {
                   <div>
                     <Label htmlFor="signageColors">Renk Paleti</Label>
                     <Select value={signageColors} onValueChange={setSignageColors}>
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none">
                         <SelectValue placeholder="Renk paleti seçin" />
                       </SelectTrigger>
                       <SelectContent>
@@ -367,7 +367,7 @@ export default function AISignageOverlay() {
                       value={customDescription}
                       onChange={(e) => setCustomDescription(e.target.value)}
                       maxLength={200}
-                      className="min-h-[80px]"
+                      className="min-h-[80px] border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                     />
                     <p className="text-sm text-muted-foreground">
                       {customDescription.length}/200 karakter
@@ -396,6 +396,7 @@ export default function AISignageOverlay() {
                           placeholder="0555 123 45 67"
                           value={contactInfo.phone}
                           onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                          className="border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                         />
                       </div>
 
@@ -406,6 +407,7 @@ export default function AISignageOverlay() {
                           placeholder="www.sirket.com"
                           value={contactInfo.website}
                           onChange={(e) => setContactInfo(prev => ({ ...prev, website: e.target.value }))}
+                          className="border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                         />
                       </div>
 
@@ -416,6 +418,7 @@ export default function AISignageOverlay() {
                           placeholder="@sirketadi"
                           value={contactInfo.instagram}
                           onChange={(e) => setContactInfo(prev => ({ ...prev, instagram: e.target.value }))}
+                          className="border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                         />
                       </div>
 
@@ -426,6 +429,7 @@ export default function AISignageOverlay() {
                           placeholder="Şirket Sayfası"
                           value={contactInfo.facebook}
                           onChange={(e) => setContactInfo(prev => ({ ...prev, facebook: e.target.value }))}
+                          className="border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -459,7 +463,7 @@ export default function AISignageOverlay() {
                       value={signageText}
                       onChange={(e) => setSignageText(e.target.value)}
                       placeholder="Şirket adınızı girin"
-                      className="mt-2"
+                      className="mt-2 border border-gray-300 focus:border-gray-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                     />
                   </div>
 
@@ -467,7 +471,7 @@ export default function AISignageOverlay() {
                     <Label className="text-lg font-semibold text-gray-700">
                       🎨 Beğendiğiniz Tabela Örneği
                     </Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+                    <div className="border border-dashed border-gray-300 rounded-xl p-6 hover:border-gray-400 transition-colors">
                       <input
                         type="file"
                         accept="image/*"
