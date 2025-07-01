@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
+  --background: hsl(210, 15%, 20%); /* Logoya uygun koyu bir arka plan */
+  --foreground: hsl(0, 0%, 100%); 
   --muted: hsl(60, 4.8%, 95.9%);
   --muted-foreground: hsl(25, 5.3%, 44.7%);
   --popover: hsl(0, 0%, 100%);
@@ -13,11 +13,11 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(214, 84%, 56%);
+  --primary: hsl(200, 100%, 50%);
   --primary-foreground: hsl(211, 100%, 99%);
   --secondary: hsl(215, 16%, 47%);
   --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(37, 92%, 50%);
+  --accent: hsl(300, 70%, 50%);
   --accent-foreground: hsl(24, 9.8%, 10%);
   --success: hsl(142, 76%, 36%);
   --success-foreground: hsl(355, 7%, 97%);
@@ -25,6 +25,7 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
+  --border: hsl(0, 0%, 70%);
 }
 
 .dark {
@@ -49,7 +50,18 @@
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
 }
+button {
+  background-color: var(--primary);
+  color: var(--foreground);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
 
+.card {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
 @layer base {
   * {
     @apply border-border;
