@@ -269,16 +269,28 @@ export default function AISignageOverlay() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
                   <TabsTrigger 
                     value="form" 
-                    className="bg-gray-200 text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 hover:bg-gray-300 transition-colors"
+                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-red-500 data-[state=inactive]:to-orange-500 transition-all duration-200"
+                    style={{
+                      background: activeTab === 'form' 
+                        ? 'white' 
+                        : 'linear-gradient(to right, #ef4444, #f97316)',
+                      color: activeTab === 'form' ? '#1f2937' : 'white'
+                    }}
                   >
                     📝 Form Doldur
                   </TabsTrigger>
                   <TabsTrigger 
                     value="reference" 
-                    className="bg-gray-200 text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900 hover:bg-gray-300 transition-colors"
+                    className="relative overflow-hidden bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold p-3 rounded-md data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:bg-gradient-to-r data-[state=inactive]:from-red-500 data-[state=inactive]:to-orange-500 transition-all duration-200"
+                    style={{
+                      background: activeTab === 'reference' 
+                        ? 'white' 
+                        : 'linear-gradient(to right, #ef4444, #f97316)',
+                      color: activeTab === 'reference' ? '#1f2937' : 'white'
+                    }}
                   >
                     🖼️ Örnek Yükle
                   </TabsTrigger>
