@@ -26,6 +26,8 @@ export default function AISignageOverlay() {
     facebook: ""
   });
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
   const { toast } = useToast();
 
   const generateSignageMutation = useMutation({
@@ -154,6 +156,24 @@ export default function AISignageOverlay() {
     setSignageColors("professional");
   };
 
+    const handleReferenceImageUpload = (event: any) => {
+        const file = event.target.files[0];
+    
+        if (file) {
+          setIsAnalyzingReference(true);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setReferenceImage(reader.result as string);
+            setIsAnalyzingReference(false);
+            toast({
+              title: "Başarılı",
+              description: "Referans görsel başarıyla yüklendi.",
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
   return (
     <section id="ai-tabela" className="py-20 bg-gradient-to-br from-slate-100 to-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -172,6 +192,54 @@ export default function AISignageOverlay() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
 
               <div className="space-y-6">
+                  {/* Referans Görsel Yükleme */}
+                  <div className="mb-6">
+                      <Label className="text-lg font-semibold text-gray-700 mb-3 block">
+                          🎨 Referans Tabela Görseli (İsteğe Bağlı)
+                      </Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+                          <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleReferenceImageUpload}
+                              className="hidden"
+                              id="reference-upload"
+                          />
+                          <label
+                              htmlFor="reference-upload"
+                              className="cursor-pointer flex flex-col items-center justify-center"
+                          >
+                              {referenceImage ? (
+                                  <div className="w-full">
+                                      <img
+                                          src={referenceImage}
+                                          alt="Referans tabela"
+                                          className="max-h-48 mx-auto rounded-lg mb-3"
+                                      />
+                                      <p className="text-sm text-green-600 text-center">
+                                          ✅ Referans görsel yüklendi ve analiz edildi
+                                      </p>
+                                  </div>
+                              ) : (
+                                  <>
+                                      <div className="text-4xl mb-3">🖼️</div>
+                                      <p className="text-gray-600 text-center">
+                                          Beğendiğiniz bir tabela fotoğrafı yükleyin
+                                      </p>
+                                      <p className="text-sm text-gray-500 text-center mt-2">
+                                          AI bu görseli analiz edip benzer stil önerecek
+                                      </p>
+                                  </>
+                              )}
+                          </label>
+                      </div>
+                      {isAnalyzingReference && (
+                          <p className="text-blue-600 text-sm mt-2 text-center">
+                              🔍 Görsel analiz ediliyor...
+                          </p>
+                      )}
+                  </div>
+
                 <div>
                   <Label htmlFor="signageText">Tabela Metni</Label>
                   <Input

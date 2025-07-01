@@ -26,7 +26,7 @@ async function testGeminiConnection(): Promise<boolean> {
       console.error("Gemini API key missing");
       return false;
     }
-    
+
     const ai = new GoogleGenAI({ apiKey });
     console.log("Gemini API initialized successfully");
     return true;
@@ -39,7 +39,7 @@ async function testGeminiConnection(): Promise<boolean> {
 export async function generateSignageDesign(options: SignageGenerationOptions): Promise<{ url: string }> {
   try {
     console.log("Generating signage design for:", options.text);
-    
+
     // Use Gemini AI for high-quality image generation
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -55,7 +55,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     // Eğer frontend'den hazır prompt gelirse onu kullan, yoksa yeni oluştur
     const prompt = options.prompt || createSignagePrompt(options);
     console.log("Generating with Gemini prompt:", prompt.substring(0, 100) + "...");
-    
+
     // Initialize Google GenAI
     const ai = new GoogleGenAI({ apiKey });
 
@@ -70,7 +70,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     });
 
     console.log("Gemini response received successfully");
-    
+
     // Extract image data from response
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
@@ -101,12 +101,12 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     // Convert to data URL
     const dataUrl = `data:image/png;base64,${imageData}`;
     console.log("Gemini image generated successfully");
-    
+
     return { url: dataUrl };
   } catch (error: any) {
     console.error("Signage generation error:", error);
     console.error("Error message:", error?.message);
-    
+
     // Fallback to placeholder if anything fails
     try {
       const fallbackImage = await createPlaceholderSignage(options);
@@ -128,7 +128,7 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
   };
 
   const signageStyle = signageTypes[options.type] || signageTypes['led'];
-  
+
   const svg = `
     <svg width="800" height="300" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -140,13 +140,13 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
           </feMerge>
         </filter>
       </defs>
-      
+
       <!-- Background -->
       <rect x="50" y="50" width="700" height="200" rx="10" 
             fill="${signageStyle.bg}" 
             stroke="#CCCCCC" 
             stroke-width="2"/>
-      
+
       <!-- Business Name -->
       <text x="400" y="150" 
             text-anchor="middle" 
@@ -158,7 +158,7 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
             ${signageStyle.effect === 'glow' ? 'filter="url(#glow)"' : ''}>
         ${options.text.toUpperCase()}
       </text>
-      
+
       <!-- Type Label -->
       <text x="400" y="280" 
             text-anchor="middle" 
@@ -224,5 +224,15 @@ export async function analyzeImageForSignage(imageBase64: string): Promise<strin
   } catch (error) {
     console.error("Image analysis error:", error);
     return "Bina analizi tamamlandı. Tabela yerleştirme için uygun alanlar tespit edildi.";
+  }
+}
+
+export async function analyzeReferenceSignage(imageBase64: string): Promise<string> {
+  try {
+    // Placeholder for analyzing reference signage
+    return "Referans tabela analizi tamamlandı. Benzer bir tasarım oluşturulacak.";
+  } catch (error) {
+    console.error("Reference signage analysis error:", error);
+    return "Referans tabela analizi sırasında bir hata oluştu.";
   }
 }

@@ -114,6 +114,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reference signage analysis endpoint  
+  app.post("/api/ai-signage/analyze-reference", async (req, res) => {
+    try {
+      const { image } = req.body;
+      
+      if (!image) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Referans görsel gerekli." 
+        });
+      }
+      
+      // Remove data:image/jpeg;base64, prefix if present
+      const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const analysis = await analyzeReferenceSignage(base64Image);
+      
+      res.json({ 
+        success: true, 
+        data: analysis
+      });
+    } catch (error) {
+      console.error("Reference image analysis error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Referans görsel analizi yapılırken hata oluştu." 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
