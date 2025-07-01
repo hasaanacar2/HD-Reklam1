@@ -227,15 +227,24 @@ button:hover {
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 85%, 55%), hsl(25, 95%, 53%)) !important;
     background-origin: border-box !important;
     background-clip: padding-box, border-box !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     color: black !important;
-    padding: 10px 20px !important;
-    margin: 0 4px !important;
+    padding: 12px 24px !important;
+    margin: 0 6px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
   }
 
   [data-radix-tabs-trigger][data-state="active"] {
     background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 90%, 60%), hsl(25, 100%, 58%)) !important;
-    box-shadow: 0 0 0 2px rgba(220, 38, 127, 0.2) !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 127, 0.15) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  [data-radix-tabs-trigger]:hover {
+    background-image: linear-gradient(white, white), linear-gradient(135deg, hsl(0, 88%, 58%), hsl(25, 98%, 56%)) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 127, 0.1) !important;
   }
 
   /* Label stilleri */
