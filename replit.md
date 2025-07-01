@@ -97,9 +97,12 @@ A unique feature that allows customers to:
 - Replit-specific configuration for cloud deployment
 
 ## Changelog
-- July 1, 2025: Enhanced AI prompt generation system
-  - Added advanced Turkish-to-English character conversion
-  - Implemented intelligent prompt generation for signage designs
+- July 1, 2025: UI/UX improvements and Google Gemini integration
+  - Integrated Google Gemini AI for high-quality image generation (replacing Hugging Face)
+  - Fixed tab button styling in AI signage section (removed red backgrounds)
+  - Implemented functional mobile menu with black background and white hamburger icon
+  - Fixed mobile navigation with proper dropdown menu
+  - Enhanced AI prompt generation system with Turkish-to-English character conversion
   - Added form validation and error handling
   - Enhanced WhatsApp integration with cleaner business names
 - June 29, 2025: Initial setup

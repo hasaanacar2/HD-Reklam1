@@ -1,3 +1,4 @@
+import { useState } from "react";
 import HeroSection from "@/components/hero-section";
 import ServicesSection from "@/components/services-section";
 import AISignageOverlay from "@/components/ai-signage-overlay";
@@ -6,6 +7,8 @@ import ContactSection from "@/components/contact-section";
 import WhatsAppButton from "@/components/whatsapp-button";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
@@ -32,12 +35,60 @@ export default function Home() {
               </div>
             </div>
             <div className="md:hidden">
-              <button className="text-gray-900 hover:text-accent">
-                <i className="fas fa-bars text-xl"></i>
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg bg-black border-2 border-gray-700 hover:bg-gray-900 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-b border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <a 
+                href="#anasayfa" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-accent hover:bg-gray-50 rounded-md transition-colors"
+              >
+                Ana Sayfa
+              </a>
+              <a 
+                href="#hizmetler" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-accent hover:bg-gray-50 rounded-md transition-colors"
+              >
+                Hizmetler
+              </a>
+              <a 
+                href="#ai-tabela" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-accent hover:bg-gray-50 rounded-md transition-colors"
+              >
+                AI Tabela
+              </a>
+              <a 
+                href="#galeri" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-accent hover:bg-gray-50 rounded-md transition-colors"
+              >
+                Galeri
+              </a>
+              <a 
+                href="#iletisim" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-accent hover:bg-gray-50 rounded-md transition-colors"
+              >
+                İletişim
+              </a>
+            </div>
+          </div>
+        )}
       </nav>
 
       <HeroSection />

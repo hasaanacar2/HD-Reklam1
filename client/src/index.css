@@ -167,6 +167,22 @@ button:hover {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+  
+  /* Tab styling override for AI signage section */
+  #ai-tabela .tab-list {
+    background-color: #f3f4f6 !important;
+  }
+  
+  #ai-tabela [role="tab"] {
+    background-color: transparent !important;
+    color: #374151 !important;
+  }
+  
+  #ai-tabela [role="tab"][data-state="active"] {
+    background-color: white !important;
+    color: #111827 !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Form elemanları için kırmızı-turuncu geçişli çerçeve ve beyaz arka plan */

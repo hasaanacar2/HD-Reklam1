@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove data:image/jpeg;base64, prefix if present
       const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, '');
       
-      const analysis = await analyzeReferenceSignage(base64Image);
+      const analysis = await analyzeImageForSignage(base64Image);
       
       res.json({ 
         success: true, 

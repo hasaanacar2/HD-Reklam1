@@ -269,9 +269,9 @@ export default function AISignageOverlay() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="form">📝 Form Doldur</TabsTrigger>
-                  <TabsTrigger value="reference">🖼️ Örnek Yükle</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                  <TabsTrigger value="form" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">📝 Form Doldur</TabsTrigger>
+                  <TabsTrigger value="reference" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">🖼️ Örnek Yükle</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="form" className="space-y-6 mt-6">
@@ -353,7 +353,7 @@ export default function AISignageOverlay() {
                     <Checkbox
                       id="has-logo"
                       checked={hasLogo}
-                      onCheckedChange={setHasLogo}
+                      onCheckedChange={(checked) => setHasLogo(checked === true)}
                     />
                     <Label htmlFor="has-logo">Firma logosu için yer bırak</Label>
                   </div>
