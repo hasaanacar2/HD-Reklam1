@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { generateAdvancedSignagePrompt, validatePromptData, turkishToEnglish } f
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import { Checkbox } from "./ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Loader2 } from "lucide-react";
 
 export default function AISignageOverlay() {
@@ -28,6 +30,8 @@ export default function AISignageOverlay() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
+  const [activeTab, setActiveTab] = useState("form");
+  const [lastGenerationParams, setLastGenerationParams] = useState<any>(null);
   const { toast } = useToast();
 
   const generateSignageMutation = useMutation({
@@ -84,13 +88,12 @@ export default function AISignageOverlay() {
       return;
     }
 
-    // Gelişmiş İngilizce prompt oluştur
-    const englishPrompt = generateAdvancedSignagePrompt({
+    // Son parametreleri kaydet
+    const currentParams = {
       text: signageText,
       type: signageType,
       style: signageStyle,
       colors: signageColors,
-      building_description: "modern Turkish commercial building facade",
       customDescription: customDescription.trim() || undefined,
       hasLogo: hasLogo,
       contactInfo: {
@@ -99,7 +102,11 @@ export default function AISignageOverlay() {
         instagram: contactInfo.instagram.trim() || undefined,
         facebook: contactInfo.facebook.trim() || undefined
       }
-    });
+    };
+    setLastGenerationParams(currentParams);
+
+    // Gelişmiş İngilizce prompt oluştur
+    const englishPrompt = generateAdvancedSignagePrompt(currentParams);
 
     // Türkçe karakterleri düzeltilmiş işletme adını göster
     const cleanBusinessName = turkishToEnglish(signageText);
@@ -116,6 +123,22 @@ export default function AISignageOverlay() {
       colors: signageColors,
       prompt: englishPrompt
     } as any);
+  };
+
+  const regenerateSignage = () => {
+    if (lastGenerationParams) {
+      // Son parametrelerle otomatik olarak yeniden üret
+      const englishPrompt = generateAdvancedSignagePrompt(lastGenerationParams);
+      const cleanBusinessName = turkishToEnglish(lastGenerationParams.text);
+
+      generateSignageMutation.mutate({
+        text: cleanBusinessName,
+        type: lastGenerationParams.type,
+        style: lastGenerationParams.style,
+        colors: lastGenerationParams.colors,
+        prompt: englishPrompt
+      } as any);
+    }
   };
 
   const shareToWhatsApp = () => {
@@ -154,25 +177,79 @@ export default function AISignageOverlay() {
     setSignageType("led");
     setSignageStyle("modern");
     setSignageColors("professional");
+    setCustomDescription("");
+    setHasLogo(false);
+    setContactInfo({
+      phone: "",
+      website: "",
+      instagram: "",
+      facebook: ""
+    });
+    setReferenceImage(null);
+    setLastGenerationParams(null);
   };
 
-    const handleReferenceImageUpload = (event: any) => {
-        const file = event.target.files[0];
-    
-        if (file) {
-          setIsAnalyzingReference(true);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setReferenceImage(reader.result as string);
-            setIsAnalyzingReference(false);
-            toast({
-              title: "Başarılı",
-              description: "Referans görsel başarıyla yüklendi.",
-            });
-          };
-          reader.readAsDataURL(file);
-        }
+  const handleReferenceImageUpload = (event: any) => {
+    const file = event.target.files[0];
+
+    if (file) {
+      setIsAnalyzingReference(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReferenceImage(reader.result as string);
+        setIsAnalyzingReference(false);
+        toast({
+          title: "Başarılı",
+          description: "Referans görsel başarıyla yüklendi.",
+        });
       };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const generateFromReference = () => {
+    if (!signageText.trim()) {
+      toast({
+        title: "Hata",
+        description: "Lütfen şirket adını girin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!referenceImage) {
+      toast({
+        title: "Hata",
+        description: "Lütfen referans görsel yükleyin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Referans görselden basit prompt oluştur
+    const cleanBusinessName = turkishToEnglish(signageText);
+    const referencePrompt = `Create a professional commercial signage similar to the uploaded reference image. Business name: "${cleanBusinessName}" should be prominently displayed. Maintain the style, colors, and design approach of the reference signage while adapting it for the new business name. High quality, realistic commercial signage photography.`;
+
+    console.log("Reference-based generation for:", cleanBusinessName);
+    console.log("Reference prompt:", referencePrompt);
+
+    // Son parametreleri kaydet (referans mod için)
+    setLastGenerationParams({
+      text: signageText,
+      type: "reference",
+      style: "reference",
+      colors: "reference",
+      referenceMode: true
+    });
+
+    generateSignageMutation.mutate({
+      text: cleanBusinessName,
+      type: "led", // Default type for API
+      style: "modern", // Default style for API
+      colors: "professional", // Default colors for API
+      prompt: referencePrompt
+    } as any);
+  };
 
   return (
     <section id="ai-tabela" className="py-20 bg-gradient-to-br from-slate-100 to-slate-200">
@@ -191,210 +268,248 @@ export default function AISignageOverlay() {
             <div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-6">Tabela Ayarları</h3>
 
-              <div className="space-y-6">
-                  {/* Referans Görsel Yükleme */}
-                  <div className="mb-6">
-                      <Label className="text-lg font-semibold text-gray-700 mb-3 block">
-                          🎨 Referans Tabela Görseli (İsteğe Bağlı)
-                      </Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
-                          <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleReferenceImageUpload}
-                              className="hidden"
-                              id="reference-upload"
-                          />
-                          <label
-                              htmlFor="reference-upload"
-                              className="cursor-pointer flex flex-col items-center justify-center"
-                          >
-                              {referenceImage ? (
-                                  <div className="w-full">
-                                      <img
-                                          src={referenceImage}
-                                          alt="Referans tabela"
-                                          className="max-h-48 mx-auto rounded-lg mb-3"
-                                      />
-                                      <p className="text-sm text-green-600 text-center">
-                                          ✅ Referans görsel yüklendi ve analiz edildi
-                                      </p>
-                                  </div>
-                              ) : (
-                                  <>
-                                      <div className="text-4xl mb-3">🖼️</div>
-                                      <p className="text-gray-600 text-center">
-                                          Beğendiğiniz bir tabela fotoğrafı yükleyin
-                                      </p>
-                                      <p className="text-sm text-gray-500 text-center mt-2">
-                                          AI bu görseli analiz edip benzer stil önerecek
-                                      </p>
-                                  </>
-                              )}
-                          </label>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="form">📝 Form Doldur</TabsTrigger>
+                  <TabsTrigger value="reference">🖼️ Örnek Yükle</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="form" className="space-y-6 mt-6">
+                  <div>
+                    <Label htmlFor="signageText">Tabela Metni</Label>
+                    <Input
+                      id="signageText"
+                      value={signageText}
+                      onChange={(e) => setSignageText(e.target.value)}
+                      placeholder="İşletmenizin adını girin"
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="signageType">Tabela Tipi</Label>
+                    <Select value={signageType} onValueChange={setSignageType}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Tabela tipi seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="led">💡 LED Tabela</SelectItem>
+                        <SelectItem value="neon">🌈 Neon Tabela</SelectItem>
+                        <SelectItem value="lightbox">📦 Işıklı Kutu Harf</SelectItem>
+                        <SelectItem value="digital">🖨️ Dijital Baskı</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="signageStyle">Tasarım Stili</Label>
+                    <Select value={signageStyle} onValueChange={setSignageStyle}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Tasarım stili seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="modern">🔥 Modern</SelectItem>
+                        <SelectItem value="classic">⭐ Klasik</SelectItem>
+                        <SelectItem value="minimalist">✨ Minimalist</SelectItem>
+                        <SelectItem value="bold">💥 Cesur/Dikkat Çekici</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="signageColors">Renk Paleti</Label>
+                    <Select value={signageColors} onValueChange={setSignageColors}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Renk paleti seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="professional">🔵 Profesyonel (Mavi/Beyaz)</SelectItem>
+                        <SelectItem value="warm">🔴 Sıcak Renkler (Kırmızı/Turuncu)</SelectItem>
+                        <SelectItem value="cool">🟢 Soğuk Renkler (Mavi/Yeşil)</SelectItem>
+                        <SelectItem value="bold">🌈 Canlı Renkler</SelectItem>
+                        <SelectItem value="monochrome">⚫ Siyah/Beyaz</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Özel Tasarım Açıklaması */}
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-description">Özel Tasarım Açıklaması (İsteğe Bağlı)</Label>
+                    <Textarea
+                      id="custom-description"
+                      placeholder="Özel isteklerinizi buraya yazabilirsiniz... (örn: vintage görünüm, metalik efekt)"
+                      value={customDescription}
+                      onChange={(e) => setCustomDescription(e.target.value)}
+                      maxLength={200}
+                      className="min-h-[80px]"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {customDescription.length}/200 karakter
+                    </p>
+                  </div>
+
+                  {/* Logo Seçeneği */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="has-logo"
+                      checked={hasLogo}
+                      onCheckedChange={setHasLogo}
+                    />
+                    <Label htmlFor="has-logo">Firma logosu için yer bırak</Label>
+                  </div>
+
+                  {/* İletişim Bilgileri */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">İletişim Bilgileri (İsteğe Bağlı)</Label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="phone" className="text-sm">Telefon</Label>
+                        <Input
+                          id="phone"
+                          placeholder="0555 123 45 67"
+                          value={contactInfo.phone}
+                          onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                        />
                       </div>
-                      {isAnalyzingReference && (
-                          <p className="text-blue-600 text-sm mt-2 text-center">
-                              🔍 Görsel analiz ediliyor...
-                          </p>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="website" className="text-sm">Website</Label>
+                        <Input
+                          id="website"
+                          placeholder="www.sirket.com"
+                          value={contactInfo.website}
+                          onChange={(e) => setContactInfo(prev => ({ ...prev, website: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="instagram" className="text-sm">Instagram</Label>
+                        <Input
+                          id="instagram"
+                          placeholder="@sirketadi"
+                          value={contactInfo.instagram}
+                          onChange={(e) => setContactInfo(prev => ({ ...prev, instagram: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="facebook" className="text-sm">Facebook</Label>
+                        <Input
+                          id="facebook"
+                          placeholder="Şirket Sayfası"
+                          value={contactInfo.facebook}
+                          onChange={(e) => setContactInfo(prev => ({ ...prev, facebook: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button 
+                      onClick={generateSignage}
+                      disabled={generateSignageMutation.isPending}
+                      className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
+                    >
+                      {generateSignageMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          AI Tasarım Oluşturuluyor...
+                        </>
+                      ) : (
+                        <>
+                          🎨 AI Tabela Tasarımı Oluştur
+                        </>
                       )}
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="reference" className="space-y-6 mt-6">
+                  <div>
+                    <Label htmlFor="company-name-ref">Şirket Adı</Label>
+                    <Input
+                      id="company-name-ref"
+                      value={signageText}
+                      onChange={(e) => setSignageText(e.target.value)}
+                      placeholder="Şirket adınızı girin"
+                      className="mt-2"
+                    />
                   </div>
 
-                <div>
-                  <Label htmlFor="signageText">Tabela Metni</Label>
-                  <Input
-                    id="signageText"
-                    value={signageText}
-                    onChange={(e) => setSignageText(e.target.value)}
-                    placeholder="İşletmenizin adını girin"
-                    className="mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="signageType">Tabela Tipi</Label>
-                  <Select value={signageType} onValueChange={setSignageType}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Tabela tipi seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="led">💡 LED Tabela</SelectItem>
-                      <SelectItem value="neon">🌈 Neon Tabela</SelectItem>
-                      <SelectItem value="lightbox">📦 Işıklı Kutu Harf</SelectItem>
-                      <SelectItem value="digital">🖨️ Dijital Baskı</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="signageStyle">Tasarım Stili</Label>
-                  <Select value={signageStyle} onValueChange={setSignageStyle}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Tasarım stili seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="modern">🔥 Modern</SelectItem>
-                      <SelectItem value="classic">⭐ Klasik</SelectItem>
-                      <SelectItem value="minimalist">✨ Minimalist</SelectItem>
-                      <SelectItem value="bold">💥 Cesur/Dikkat Çekici</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="signageColors">Renk Paleti</Label>
-                  <Select value={signageColors} onValueChange={setSignageColors}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Renk paleti seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="professional">🔵 Profesyonel (Mavi/Beyaz)</SelectItem>
-                      <SelectItem value="warm">🔴 Sıcak Renkler (Kırmızı/Turuncu)</SelectItem>
-                      <SelectItem value="cool">🟢 Soğuk Renkler (Mavi/Yeşil)</SelectItem>
-                      <SelectItem value="bold">🌈 Canlı Renkler</SelectItem>
-                      <SelectItem value="monochrome">⚫ Siyah/Beyaz</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Özel Tasarım Açıklaması */}
-                <div className="space-y-2">
-                  <Label htmlFor="custom-description">Özel Tasarım Açıklaması (İsteğe Bağlı)</Label>
-                  <Textarea
-                    id="custom-description"
-                    placeholder="Özel isteklerinizi buraya yazabilirsiniz... (örn: vintage görünüm, metalik efekt)"
-                    value={customDescription}
-                    onChange={(e) => setCustomDescription(e.target.value)}
-                    maxLength={200}
-                    className="min-h-[80px]"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {customDescription.length}/200 karakter
-                  </p>
-                </div>
-
-                {/* Logo Seçeneği */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="has-logo"
-                    checked={hasLogo}
-                    onCheckedChange={setHasLogo}
-                  />
-                  <Label htmlFor="has-logo">Firma logosu için yer bırak</Label>
-                </div>
-
-                {/* İletişim Bilgileri */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">İletişim Bilgileri (İsteğe Bağlı)</Label>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label htmlFor="phone" className="text-sm">Telefon</Label>
-                      <Input
-                        id="phone"
-                        placeholder="0555 123 45 67"
-                        value={contactInfo.phone}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold text-gray-700">
+                      🎨 Beğendiğiniz Tabela Örneği
+                    </Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleReferenceImageUpload}
+                        className="hidden"
+                        id="reference-upload"
                       />
+                      <label
+                        htmlFor="reference-upload"
+                        className="cursor-pointer flex flex-col items-center justify-center"
+                      >
+                        {referenceImage ? (
+                          <div className="w-full">
+                            <img
+                              src={referenceImage}
+                              alt="Referans tabela"
+                              className="max-h-48 mx-auto rounded-lg mb-3"
+                            />
+                            <p className="text-sm text-green-600 text-center">
+                              ✅ Referans görsel yüklendi
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-4xl mb-3">🖼️</div>
+                            <p className="text-gray-600 text-center">
+                              Beğendiğiniz bir tabela fotoğrafı yükleyin
+                            </p>
+                            <p className="text-sm text-gray-500 text-center mt-2">
+                              AI bu görseli referans alarak benzer tasarım yapacak
+                            </p>
+                          </>
+                        )}
+                      </label>
                     </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="website" className="text-sm">Website</Label>
-                      <Input
-                        id="website"
-                        placeholder="www.sirket.com"
-                        value={contactInfo.website}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, website: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="instagram" className="text-sm">Instagram</Label>
-                      <Input
-                        id="instagram"
-                        placeholder="@sirketadi"
-                        value={contactInfo.instagram}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, instagram: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="facebook" className="text-sm">Facebook</Label>
-                      <Input
-                        id="facebook"
-                        placeholder="Şirket Sayfası"
-                        value={contactInfo.facebook}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, facebook: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4">
-                  <Button 
-                    onClick={generateSignage}
-                    disabled={generateSignageMutation.isPending}
-                    className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
-                  >
-                    {generateSignageMutation.isPending ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        AI Tasarım Oluşturuluyor...
-                      </>
-                    ) : (
-                      <>
-                        🎨 AI Tabela Tasarımı Oluştur
-                      </>
+                    {isAnalyzingReference && (
+                      <p className="text-blue-600 text-sm mt-2 text-center">
+                        🔍 Görsel yükleniyor...
+                      </p>
                     )}
-                  </Button>
-                </div>
-
-                {generateSignageMutation.isPending && (
-                  <div className="text-center text-sm text-gray-600">
-                    ⏱️ Yapay zeka tasarım oluşturuyor... (5-10 saniye)
                   </div>
-                )}
-              </div>
+
+                  <div className="pt-4">
+                    <Button 
+                      onClick={generateFromReference}
+                      disabled={generateSignageMutation.isPending}
+                      className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
+                    >
+                      {generateSignageMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Referans Tabela Oluşturuluyor...
+                        </>
+                      ) : (
+                        <>
+                          🎨 Referans Tabela Oluştur
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {generateSignageMutation.isPending && (
+                <div className="text-center text-sm text-gray-600 mt-4">
+                  ⏱️ Yapay zeka tasarım oluşturuyor... (5-10 saniye)
+                </div>
+              )}
             </div>
 
             {/* Sonuç Alanı */}
@@ -437,7 +552,7 @@ export default function AISignageOverlay() {
                     >
                       📱 WhatsApp'tan Sipariş Ver
                     </Button>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <Button 
                         onClick={downloadImage}
                         className="bg-secondary hover:bg-gray-600 text-white"
@@ -445,11 +560,22 @@ export default function AISignageOverlay() {
                         💾 İndir
                       </Button>
                       <Button 
+                        onClick={regenerateSignage}
+                        disabled={generateSignageMutation.isPending || !lastGenerationParams}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        {generateSignageMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "🔄 Tekrar Deneyin"
+                        )}
+                      </Button>
+                      <Button 
                         onClick={reset}
                         variant="outline"
                         className="border-gray-300"
                       >
-                        🔄 Yeniden Başlat
+                        🗑️ Temizle
                       </Button>
                     </div>
                   </div>
