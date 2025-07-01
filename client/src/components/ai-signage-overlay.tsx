@@ -228,7 +228,7 @@ export default function AISignageOverlay() {
 
     // Referans görselden detaylı benzerlik prompt'u oluştur
     const cleanBusinessName = turkishToEnglish(signageText);
-    const referencePrompt = `EXACT REPLICA: Create a commercial signage that EXACTLY matches the uploaded reference image in every detail. Business name: "${cleanBusinessName}" should replace the original text while maintaining IDENTICAL: lighting conditions, color scheme, typography style, background elements, mounting position, material textures, dimensional effects, shadows, reflections, viewing angle, and overall composition. Copy the EXACT same design elements, proportions, and visual characteristics from the reference image. Maximum similarity and precision required - replicate every visual aspect of the original signage design.`;
+    const referencePrompt = `Create a professional commercial signage design that closely matches the style and appearance of the provided reference image. Business name should display: "${cleanBusinessName}". Replicate the same lighting conditions, color scheme, typography style, background elements, mounting position, material textures, dimensional effects, shadows, reflections, viewing angle, and overall composition from the reference. Match all design elements, proportions, and visual characteristics while only changing the business name text. High similarity to reference image required - copy the visual style exactly but with new business name.`;
 
     console.log("Reference-based generation for:", cleanBusinessName);
     console.log("Reference prompt:", referencePrompt);

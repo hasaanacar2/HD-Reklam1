@@ -60,10 +60,14 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     const ai = new GoogleGenAI({ apiKey });
 
     console.log("Calling Gemini API...");
+    
+    // Prepare content for API call
+    const contentParts = [{ text: prompt }];
+    
     // Generate image using Gemini 2.0 Flash Preview Image Generation
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-preview-image-generation", 
-      contents: prompt,
+      contents: contentParts,
       config: {
         responseModalities: [Modality.TEXT, Modality.IMAGE],
       },
@@ -181,24 +185,33 @@ function createSignagePrompt(options: SignageGenerationOptions): string {
     return options.prompt;
   }
 
-  const basePrompt = `Create a professional signage design for a Turkish business with the following specifications:
+  const typeDescriptions: { [key: string]: string } = {
+    'led': 'LED illuminated signage with bright white or blue lighting, mounted on building facade',
+    'neon': 'Neon tube signage with colorful glow effect, classic commercial neon style',
+    'lightbox': 'Backlit lightbox signage with translucent face and internal LED lighting',
+    'digital': 'Digital printed vinyl signage with vibrant colors, non-illuminated'
+  };
 
-Business name/text: "${options.text}"
-Signage type: ${getSignageTypeDescription(options.type)}
-Style: ${options.style}
-Color scheme: ${options.colors}
-Building context: ${options.building_description}
+  const styleDescriptions: { [key: string]: string } = {
+    'modern': 'clean, contemporary design with sans-serif typography',
+    'classic': 'traditional, elegant design with professional appearance',
+    'minimalist': 'simple, clean design with minimal elements',
+    'bold': 'eye-catching design with strong visual impact'
+  };
 
-Requirements:
-- High-quality, realistic signage design
-- Professional commercial appearance
-- Turkish business aesthetic
-- Clean typography with clear readability
-- Appropriate lighting effects for the signage type
-- Suitable for outdoor commercial use
-- Modern and attractive design
-- No people in the image, focus only on the signage
-- Photorealistic style`;
+  const colorDescriptions: { [key: string]: string } = {
+    'professional': 'blue and white professional colors',
+    'warm': 'warm red, orange colors',
+    'cool': 'cool blue, green colors',
+    'bold': 'vibrant, high-contrast colors',
+    'monochrome': 'black and white colors'
+  };
+
+  const signageType = typeDescriptions[options.type] || typeDescriptions['led'];
+  const signageStyle = styleDescriptions[options.style] || styleDescriptions['modern'];
+  const signageColors = colorDescriptions[options.colors] || colorDescriptions['professional'];
+
+  const basePrompt = `Photograph of ${signageType} displaying "${options.text}" in ${signageStyle} with ${signageColors}. Turkish commercial building facade, realistic outdoor lighting, professional installation. High quality commercial photography, sharp focus, no people visible. Modern Turkish business district setting.`;
 
   return basePrompt;
 }
