@@ -51,7 +51,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Signage generation endpoint
   app.post("/api/ai-signage/generate", async (req, res) => {
     try {
-      const { text, type, style, colors, building_description } = req.body;
+      const { text, type, style, colors, building_description, prompt } = req.body;
+      
+      console.log("Received signage generation request:", { text, type, style, colors });
       
       if (!text || !type) {
         return res.status(400).json({ 
@@ -65,7 +67,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type,
         style: style || "modern",
         colors: colors || "professional",
-        building_description: building_description || "commercial building"
+        building_description: building_description || "commercial building",
+        prompt: prompt || undefined
       });
       
       res.json({ 

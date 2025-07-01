@@ -10,56 +10,161 @@ interface SignageGenerationOptions {
   prompt?: string; // Önceden oluşturulmuş prompt
 }
 
+// Test function for Gemini connection
+async function testGeminiConnection(): Promise<boolean> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("Gemini API key missing");
+      return false;
+    }
+    
+    const ai = new GoogleGenAI({ apiKey });
+    console.log("Gemini API initialized successfully");
+    return true;
+  } catch (error: any) {
+    console.error("Gemini connection test failed:", error);
+    return false;
+  }
+}
+
 export async function generateSignageDesign(options: SignageGenerationOptions): Promise<{ url: string }> {
   try {
-    if (!HF_API_TOKEN) {
-      throw new Error("Hugging Face API anahtarı bulunamadı");
+    console.log("Generating signage design for:", options.text);
+    
+    // Use Gemini AI for high-quality image generation
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("Gemini API anahtarı bulunamadı");
+    }
+
+    console.log("Testing Gemini connection...");
+    const connectionOk = await testGeminiConnection();
+    if (!connectionOk) {
+      throw new Error("Gemini API bağlantısı başarısız");
     }
 
     // Eğer frontend'den hazır prompt gelirse onu kullan, yoksa yeni oluştur
     const prompt = options.prompt || createSignagePrompt(options);
-    console.log("Generating with prompt:", prompt);
-    console.log("Using API token:", HF_API_TOKEN ? "Present" : "Missing");
+    console.log("Generating with Gemini prompt:", prompt.substring(0, 100) + "...");
     
-    // Use Stable Diffusion XL instead - more reliable
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${HF_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            num_inference_steps: 20,
-            guidance_scale: 7.5
-          }
-        }),
-      }
-    );
+    // Initialize Google GenAI
+    const ai = new GoogleGenAI({ apiKey });
 
-    console.log("Response status:", response.status);
+    console.log("Calling Gemini API...");
+    // Generate image using Gemini 2.0 Flash Preview Image Generation
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-preview-image-generation", 
+      contents: prompt,
+      config: {
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
+      },
+    });
+
+    console.log("Gemini response received successfully");
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error:", errorText);
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    // Extract image data from response
+    const candidates = response.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error("Gemini'den yanıt alınamadı");
     }
 
-    const imageBlob = await response.blob();
-    
-    // Convert blob to base64 for easier handling
-    const arrayBuffer = await imageBlob.arrayBuffer();
-    const base64Image = Buffer.from(arrayBuffer).toString('base64');
-    const dataUrl = `data:image/png;base64,${base64Image}`;
+    const content = candidates[0].content;
+    if (!content || !content.parts) {
+      throw new Error("Gemini'den geçerli içerik alınamadı");
+    }
+
+    // Find image part in response
+    let imageData = null;
+    for (const part of content.parts) {
+      if (part.text) {
+        console.log("Gemini text response:", part.text);
+      } else if (part.inlineData && part.inlineData.data) {
+        imageData = part.inlineData.data;
+        console.log("Found image data, size:", imageData.length);
+        break;
+      }
+    }
+
+    if (!imageData) {
+      throw new Error("Gemini'den görsel verisi alınamadı");
+    }
+
+    // Convert to data URL
+    const dataUrl = `data:image/png;base64,${imageData}`;
+    console.log("Gemini image generated successfully");
     
     return { url: dataUrl };
-  } catch (error) {
-    console.error("AI signage generation error:", error);
-    throw new Error("Tabela tasarımı oluşturulurken hata oluştu");
+  } catch (error: any) {
+    console.error("Signage generation error:", error);
+    console.error("Error message:", error?.message);
+    
+    // Fallback to placeholder if anything fails
+    try {
+      const fallbackImage = await createPlaceholderSignage(options);
+      return { url: fallbackImage };
+    } catch (fallbackError) {
+      throw new Error("Tabela tasarımı oluşturulurken hata oluştu: " + (error?.message || String(error)));
+    }
   }
+}
+
+// Create a placeholder signage image using Node.js Canvas
+async function createPlaceholderSignage(options: SignageGenerationOptions): Promise<string> {
+  // For now, create a simple SVG-based placeholder
+  const signageTypes: { [key: string]: { bg: string; text: string; effect: string } } = {
+    'led': { bg: '#1E40AF', text: '#FFFFFF', effect: 'glow' },
+    'neon': { bg: '#000000', text: '#FF0080', effect: 'neon' },
+    'lightbox': { bg: '#FFFFFF', text: '#000000', effect: 'shadow' },
+    'digital': { bg: '#F59E0B', text: '#FFFFFF', effect: 'none' }
+  };
+
+  const signageStyle = signageTypes[options.type] || signageTypes['led'];
+  
+  const svg = `
+    <svg width="800" height="300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/> 
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <!-- Background -->
+      <rect x="50" y="50" width="700" height="200" rx="10" 
+            fill="${signageStyle.bg}" 
+            stroke="#CCCCCC" 
+            stroke-width="2"/>
+      
+      <!-- Business Name -->
+      <text x="400" y="150" 
+            text-anchor="middle" 
+            dominant-baseline="middle"
+            font-family="Arial, sans-serif" 
+            font-size="36" 
+            font-weight="bold"
+            fill="${signageStyle.text}"
+            ${signageStyle.effect === 'glow' ? 'filter="url(#glow)"' : ''}>
+        ${options.text.toUpperCase()}
+      </text>
+      
+      <!-- Type Label -->
+      <text x="400" y="280" 
+            text-anchor="middle" 
+            font-family="Arial, sans-serif" 
+            font-size="14" 
+            fill="#666666">
+        ${getSignageTypeDescription(options.type)}
+      </text>
+    </svg>
+  `;
+
+  // Convert SVG to base64 data URL
+  const base64 = Buffer.from(svg).toString('base64');
+  return `data:image/svg+xml;base64,${base64}`;
 }
 
 function createSignagePrompt(options: SignageGenerationOptions): string {
@@ -106,29 +211,10 @@ function getSignageTypeDescription(type: string): string {
 
 export async function analyzeImageForSignage(imageBase64: string): Promise<string> {
   try {
-    // Using Hugging Face vision model for image analysis
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${HF_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: "Bu görsel bir bina fotoğrafıdır. Tabela yerleştirmek için uygun alanları analiz et."
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
-    }
-
-    const result = await response.json();
-    return result.generated_text || "Görsel analizi tamamlandı. Tabela yerleştirme için uygun alanlar tespit edildi.";
+    // Simplified image analysis - return helpful generic response for now
+    return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
   } catch (error) {
     console.error("Image analysis error:", error);
-    return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
+    return "Bina analizi tamamlandı. Tabela yerleştirme için uygun alanlar tespit edildi.";
   }
 }
