@@ -49,6 +49,7 @@
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
 }
+
 button {
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: var(--primary-foreground);

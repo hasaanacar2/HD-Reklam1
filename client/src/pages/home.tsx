@@ -50,7 +50,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Neden HD Reklam?</h2>
-            <p className="text-xl text-red-100 max-w-3xl mx-auto"></p>
+            <p className="text-xl text-red-100 max-w-3xl mx-auto">
               15 yıllık deneyimimiz ve modern teknolojimizle sektörde öncüyüz.
             </p>
           </div>
