@@ -168,3 +168,45 @@ button:hover {
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Form elemanları için kırmızı çerçeve ve beyaz arka plan */
+@layer components {
+  input, 
+  textarea, 
+  select,
+  .form-control,
+  [role="combobox"],
+  [data-radix-select-trigger] {
+    background-color: white !important;
+    border: 2px solid hsl(0, 85%, 55%) !important;
+    border-radius: 8px !important;
+    color: black !important;
+  }
+
+  input:focus, 
+  textarea:focus, 
+  select:focus,
+  .form-control:focus,
+  [role="combobox"]:focus,
+  [data-radix-select-trigger]:focus {
+    border-color: hsl(0, 70%, 45%) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 127, 0.1) !important;
+    outline: none !important;
+  }
+
+  /* Select dropdown içerikleri */
+  [data-radix-select-content] {
+    background-color: white !important;
+    border: 2px solid hsl(0, 85%, 55%) !important;
+    border-radius: 8px !important;
+  }
+
+  [data-radix-select-item] {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  [data-radix-select-item]:hover {
+    background-color: hsl(0, 85%, 95%) !important;
+  }
+}
