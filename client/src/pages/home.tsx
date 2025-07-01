@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
-      <nav className="bg-gradient-to-r from-red-900 to-red-950 shadow-lg sticky top-0 z-40">
+      <nav className="bg-white text-gray-900 shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -24,15 +24,15 @@ export default function Home() {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="#anasayfa" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Ana Sayfa</a>
-                <a href="#hizmetler" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Hizmetler</a>
-                <a href="#ai-tabela" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">AI Tabela</a>
-                <a href="#galeri" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Galeri</a>
-                <a href="#iletisim" className="text-white hover:text-accent px-3 py-2 text-sm font-medium transition-colors">İletişim</a>
+                <a href="#anasayfa" className="text-gray-900 hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Ana Sayfa</a>
+                <a href="#hizmetler" className="text-gray-900 hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Hizmetler</a>
+                <a href="#ai-tabela" className="text-gray-900 hover:text-accent px-3 py-2 text-sm font-medium transition-colors">AI Tabela</a>
+                <a href="#galeri" className="text-gray-900 hover:text-accent px-3 py-2 text-sm font-medium transition-colors">Galeri</a>
+                <a href="#iletisim" className="text-gray-900 hover:text-accent px-3 py-2 text-sm font-medium transition-colors">İletişim</a>
               </div>
             </div>
             <div className="md:hidden">
-              <button className="text-white hover:text-accent">
+              <button className="text-gray-900 hover:text-accent">
                 <i className="fas fa-bars text-xl"></i>
               </button>
             </div>
@@ -44,7 +44,7 @@ export default function Home() {
       <ServicesSection />
       <AISignageOverlay />
       <PortfolioSection />
-      
+
       {/* Why Choose Us Section */}
       <section className="py-20 bg-gradient-to-br from-primary to-red-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
