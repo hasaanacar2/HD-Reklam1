@@ -15,7 +15,7 @@ export default function Home() {
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center space-x-3">
                 <img 
-                  src="/attached_assets/0f7a3145-8b08-4199-ab65-9f33bf21adc9_1751381993745.jpeg" 
+                  src="/logo.jpeg" 
                   alt="HD Reklam Logo" 
                   className="h-12 w-auto"
                 />
@@ -100,7 +100,7 @@ export default function Home() {
             <div>
               <div className="flex items-center space-x-3 mb-6">
                 <img 
-                  src="/attached_assets/0f7a3145-8b08-4199-ab65-9f33bf21adc9_1751381993745.jpeg" 
+                  src="/logo.jpeg" 
                   alt="HD Reklam Logo" 
                   className="h-10 w-auto"
                 />
