@@ -1,5 +1,5 @@
-// Hugging Face free API integration
-const HF_API_TOKEN = process.env.HUGGING_FACE_API_KEY;
+// Google Gemini AI integration for better image quality
+import { GoogleGenAI, Modality } from "@google/genai";
 
 interface SignageGenerationOptions {
   text: string;
