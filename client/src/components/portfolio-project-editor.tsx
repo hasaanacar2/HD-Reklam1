@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PortfolioProject {
@@ -26,8 +26,10 @@ interface PortfolioProject {
 export default function PortfolioProjectEditor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<PortfolioProject | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -159,6 +161,7 @@ export default function PortfolioProjectEditor() {
         completionDate: project.completionDate ? new Date(project.completionDate).toISOString().split('T')[0] : '',
         isActive: project.isActive
       });
+      setImagePreview(project.imageUrl || '');
     } else {
       setEditingProject(null);
       setFormData({
@@ -170,8 +173,22 @@ export default function PortfolioProjectEditor() {
         completionDate: '',
         isActive: true
       });
+      setImagePreview('');
     }
     setIsDialogOpen(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setFormData({ ...formData, imageUrl: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -186,14 +203,23 @@ export default function PortfolioProjectEditor() {
       completionDate: '',
       isActive: true
     });
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveMutation.mutate({
+    const dataToSave: any = {
       ...formData,
+      completionDate: formData.completionDate ? new Date(formData.completionDate).toISOString() : undefined,
       id: editingProject?.id
-    });
+    };
+    if (!dataToSave.completionDate) {
+      delete dataToSave.completionDate;
+    }
+    saveMutation.mutate(dataToSave);
   };
 
   const moveProject = (index: number, direction: 'up' | 'down') => {
@@ -279,25 +305,29 @@ export default function PortfolioProjectEditor() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="imageUrl">Görsel URL</Label>
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
-                  />
-                  {formData.imageUrl && (
-                    <div className="mt-2">
-                      <img 
-                        src={formData.imageUrl} 
-                        alt="Önizleme" 
-                        className="h-32 object-cover rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
+                  <Label htmlFor="imageFile">Proje Görseli</Label>
+                  <div className="space-y-2">
+                    <Input
+                      ref={fileInputRef}
+                      id="imageFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="cursor-pointer"
+                    />
+                    <div className="text-xs text-gray-500">
+                      JPG, PNG veya GIF formatında resim yükleyebilirsiniz
                     </div>
-                  )}
+                    {imagePreview && (
+                      <div className="mt-2">
+                        <img 
+                          src={imagePreview} 
+                          alt="Önizleme" 
+                          className="h-32 object-cover rounded border"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
