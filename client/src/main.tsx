@@ -6,7 +6,6 @@ import "./index.css";
 window.addEventListener('error', (event) => {
   if (event.message && event.message.includes('frame')) {
     event.preventDefault();
-    console.warn('Frame error suppressed:', event.message);
   }
 });
 
@@ -14,7 +13,6 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   if (event.reason && event.reason.toString().includes('frame')) {
     event.preventDefault();
-    console.warn('Frame promise rejection suppressed:', event.reason);
   }
 });
 

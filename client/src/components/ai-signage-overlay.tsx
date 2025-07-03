@@ -108,13 +108,7 @@ export default function AISignageOverlay() {
     // Gelişmiş İngilizce prompt oluştur
     const englishPrompt = generateAdvancedSignagePrompt(currentParams);
 
-    // Türkçe karakterleri düzeltilmiş işletme adını göster
     const cleanBusinessName = turkishToEnglish(signageText);
-
-    console.log("Original text:", signageText);
-    console.log("Cleaned text:", cleanBusinessName);
-    console.log("Generated prompt (full):", englishPrompt);
-    console.log("Prompt length:", englishPrompt.length, "characters");
 
     generateSignageMutation.mutate({
       text: cleanBusinessName,
@@ -229,9 +223,6 @@ export default function AISignageOverlay() {
     // Referans görselden detaylı benzerlik prompt'u oluştur
     const cleanBusinessName = turkishToEnglish(signageText);
     const referencePrompt = `Create a professional commercial signage design that closely matches the style and appearance of the provided reference image. Business name should display: "${cleanBusinessName}". Replicate the same lighting conditions, color scheme, typography style, background elements, mounting position, material textures, dimensional effects, shadows, reflections, viewing angle, and overall composition from the reference. Match all design elements, proportions, and visual characteristics while only changing the business name text. High similarity to reference image required - copy the visual style exactly but with new business name.`;
-
-    console.log("Reference-based generation for:", cleanBusinessName);
-    console.log("Reference prompt:", referencePrompt);
 
     // Son parametreleri kaydet (referans mod için)
     setLastGenerationParams({

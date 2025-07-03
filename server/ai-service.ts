@@ -1,4 +1,3 @@
-// Daha iyi görsel kalitesi için Google Gemini AI entegrasyonu
 import { GoogleGenAI, Modality } from "@google/genai";
 
 interface SignageGenerationOptions {
@@ -7,7 +6,7 @@ interface SignageGenerationOptions {
   style: string;
   colors: string;
   building_description: string;
-  prompt?: string; // Önceden oluşturulmuş prompt
+  prompt?: string;
   custom_description?: string;
   has_logo?: boolean;
   contact_info?: {
@@ -18,53 +17,35 @@ interface SignageGenerationOptions {
   };
 }
 
-// Gemini bağlantısı için test fonksiyonu
 async function testGeminiConnection(): Promise<boolean> {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("Gemini API key missing");
       return false;
     }
-
-    const ai = new GoogleGenAI({ apiKey });
-    console.log("Gemini API initialized successfully");
+    new GoogleGenAI({ apiKey });
     return true;
   } catch (error: any) {
-    console.error("Gemini connection test failed:", error);
     return false;
   }
 }
 
 export async function generateSignageDesign(options: SignageGenerationOptions): Promise<{ url: string }> {
   try {
-    console.log("Generating signage design for:", options.text);
-
-    // Yüksek kaliteli görsel üretimi için Gemini AI kullan
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("Gemini API anahtarı bulunamadı");
     }
 
-    console.log("Testing Gemini connection...");
     const connectionOk = await testGeminiConnection();
     if (!connectionOk) {
       throw new Error("Gemini API bağlantısı başarısız");
     }
 
-    // Eğer frontend'den hazır prompt gelirse onu kullan, yoksa yeni oluştur
     const prompt = options.prompt || createSignagePrompt(options);
-    console.log("Generating with Gemini prompt:", prompt.substring(0, 100) + "...");
-
-    // Google GenAI'ı başlat
     const ai = new GoogleGenAI({ apiKey });
-
-    console.log("Calling Gemini API...");
-    
-    // API çağrısı için içerik hazırla
     const contentParts = [{ text: prompt }];
     
-    // Gemini 2.0 Flash Preview Görsel Üretimi kullanarak görsel oluştur
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-preview-image-generation", 
       contents: contentParts,
@@ -73,9 +54,6 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       },
     });
 
-    console.log("Gemini response received successfully");
-
-    // Yanıttan görsel verisini çıkar
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error("Gemini'den yanıt alınamadı");
@@ -86,14 +64,10 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       throw new Error("Gemini'den geçerli içerik alınamadı");
     }
 
-    // Yanıtta görsel kısmını bul
     let imageData = null;
     for (const part of content.parts) {
-      if (part.text) {
-        console.log("Gemini text response:", part.text);
-      } else if (part.inlineData && part.inlineData.data) {
+      if (part.inlineData && part.inlineData.data) {
         imageData = part.inlineData.data;
-        console.log("Found image data, size:", imageData.length);
         break;
       }
     }
@@ -102,16 +76,9 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       throw new Error("Gemini'den görsel verisi alınamadı");
     }
 
-    // Data URL'ye dönüştür
     const dataUrl = `data:image/png;base64,${imageData}`;
-    console.log("Gemini image generated successfully");
-
     return { url: dataUrl };
   } catch (error: any) {
-    console.error("Signage generation error:", error);
-    console.error("Error message:", error?.message);
-
-    // Herhangi bir hata durumunda placeholder'a geri dön
     try {
       const fallbackImage = await createPlaceholderSignage(options);
       return { url: fallbackImage };
@@ -240,7 +207,6 @@ export async function analyzeImageForSignage(imageBase64: string): Promise<strin
     // Basitleştirilmiş görsel analizi - şimdilik genel yararlı yanıt döndür
     return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
   } catch (error) {
-    console.error("Image analysis error:", error);
     return "Bina analizi tamamlandı. Tabela yerleştirme için uygun alanlar tespit edildi.";
   }
 }
@@ -250,7 +216,6 @@ export async function analyzeReferenceSignage(imageBase64: string): Promise<stri
     // Referans tabela analizi için placeholder
     return "Referans tabela analizi tamamlandı. Benzer bir tasarım oluşturulacak.";
   } catch (error) {
-    console.error("Reference signage analysis error:", error);
     return "Referans tabela analizi sırasında bir hata oluştu.";
   }
 }
