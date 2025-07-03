@@ -25,8 +25,11 @@ This repository is a full-stack web application for "HD Reklam", a Turkish signa
 
 ### Database Schema
 The application uses Drizzle ORM with PostgreSQL and includes:
-- **Users table**: Basic user authentication (id, username, password)
+- **Users table**: Basic user authentication with admin role support (id, username, password, isAdmin)
 - **Contact requests table**: Customer inquiries (id, name, email, phone, service_type, message, created_at)
+- **Projects table**: Project management with client details and status tracking
+- **Current accounts table**: Customer/supplier account management with balance tracking
+- **Account transactions table**: Financial transaction records with automatic balance calculation
 - Schema validation using Drizzle-Zod for type-safe database operations
 
 ## Key Components
@@ -97,6 +100,15 @@ A unique feature that allows customers to:
 - Replit-specific configuration for cloud deployment
 
 ## Changelog
+- July 3, 2025: Admin panel and business management system
+  - Added comprehensive admin panel (/admin) with project and account management
+  - Implemented PostgreSQL database with projects, current accounts, and transactions tables
+  - Created DatabaseStorage system replacing MemStorage for production readiness
+  - Added project management: create, view, delete projects with client details and status tracking
+  - Implemented current account system: customer/supplier management with balance calculation
+  - Added transaction tracking with automatic balance updates for debtors and creditors
+  - Created complete CRUD API endpoints for admin functionality
+  - Enhanced form styling with thin borders and clean UI design
 - July 1, 2025: UI/UX improvements and Google Gemini integration
   - Integrated Google Gemini AI for high-quality image generation (replacing Hugging Face)
   - Fixed tab button styling in AI signage section (removed red backgrounds)

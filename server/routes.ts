@@ -1,8 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
-import { insertContactRequestSchema } from "@shared/schema";
+import { 
+  insertContactRequestSchema, 
+  insertProjectSchema, 
+  insertCurrentAccountSchema, 
+  insertTransactionSchema 
+} from "@shared/schema";
 import { generateSignageDesign, analyzeImageForSignage } from "./ai-service";
+import { storage } from "./storage";
 
 // Mock storage for contact requests
 const contactRequests: any[] = [];
@@ -141,6 +147,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false, 
         message: "Referans görsel analizi yapılırken hata oluştu." 
       });
+    }
+  });
+
+  // Admin routes for project management
+  app.get("/api/admin/projects", async (req, res) => {
+    try {
+      const projects = await storage.getProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  app.post("/api/admin/projects", async (req, res) => {
+    try {
+      const validatedData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(validatedData);
+      res.json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      res.status(500).json({ message: "Failed to create project" });
+    }
+  });
+
+  app.delete("/api/admin/projects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProject(id);
+      res.json({ message: "Project deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Admin routes for current accounts
+  app.get("/api/admin/accounts", async (req, res) => {
+    try {
+      const accounts = await storage.getCurrentAccounts();
+      res.json(accounts);
+    } catch (error) {
+      console.error("Error fetching accounts:", error);
+      res.status(500).json({ message: "Failed to fetch accounts" });
+    }
+  });
+
+  app.post("/api/admin/accounts", async (req, res) => {
+    try {
+      const validatedData = insertCurrentAccountSchema.parse(req.body);
+      const account = await storage.createCurrentAccount(validatedData);
+      res.json(account);
+    } catch (error) {
+      console.error("Error creating account:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
+  // Admin routes for transactions
+  app.get("/api/admin/transactions", async (req, res) => {
+    try {
+      const accountId = req.query.accountId ? parseInt(req.query.accountId as string) : undefined;
+      const transactions = await storage.getAccountTransactions(accountId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.post("/api/admin/transactions", async (req, res) => {
+    try {
+      const validatedData = insertTransactionSchema.parse(req.body);
+      const transaction = await storage.createTransaction(validatedData);
+      res.json(transaction);
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      res.status(500).json({ message: "Failed to create transaction" });
     }
   });
 
