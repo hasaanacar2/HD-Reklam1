@@ -81,14 +81,14 @@ export default function PortfolioSection() {
               <>
                 <button
                   onClick={prevPage}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full shadow-lg p-2 hover:shadow-xl transition-shadow disabled:opacity-50"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 md:-translate-x-16 z-10 bg-white rounded-full shadow-lg p-3 hover:shadow-xl hover:scale-110 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
                   disabled={currentPage === 0}
                 >
                   <ChevronLeft className="h-6 w-6 text-gray-700" />
                 </button>
                 <button
                   onClick={nextPage}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full shadow-lg p-2 hover:shadow-xl transition-shadow disabled:opacity-50"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 md:translate-x-16 z-10 bg-white rounded-full shadow-lg p-3 hover:shadow-xl hover:scale-110 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
                   disabled={currentPage === totalPages - 1}
                 >
                   <ChevronRight className="h-6 w-6 text-gray-700" />
