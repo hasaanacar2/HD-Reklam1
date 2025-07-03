@@ -679,8 +679,6 @@ export default function AdminPage() {
                         </form>
                       </CardContent>
                     </Card>
-                  </div>
-                )}
           </div>
         </TabsContent>
       </Tabs>
