@@ -1,4 +1,4 @@
-// Google Gemini AI integration for better image quality
+// Daha iyi görsel kalitesi için Google Gemini AI entegrasyonu
 import { GoogleGenAI, Modality } from "@google/genai";
 
 interface SignageGenerationOptions {
@@ -18,7 +18,7 @@ interface SignageGenerationOptions {
   };
 }
 
-// Test function for Gemini connection
+// Gemini bağlantısı için test fonksiyonu
 async function testGeminiConnection(): Promise<boolean> {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -40,7 +40,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
   try {
     console.log("Generating signage design for:", options.text);
 
-    // Use Gemini AI for high-quality image generation
+    // Yüksek kaliteli görsel üretimi için Gemini AI kullan
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("Gemini API anahtarı bulunamadı");
@@ -56,15 +56,15 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     const prompt = options.prompt || createSignagePrompt(options);
     console.log("Generating with Gemini prompt:", prompt.substring(0, 100) + "...");
 
-    // Initialize Google GenAI
+    // Google GenAI'ı başlat
     const ai = new GoogleGenAI({ apiKey });
 
     console.log("Calling Gemini API...");
     
-    // Prepare content for API call
+    // API çağrısı için içerik hazırla
     const contentParts = [{ text: prompt }];
     
-    // Generate image using Gemini 2.0 Flash Preview Image Generation
+    // Gemini 2.0 Flash Preview Görsel Üretimi kullanarak görsel oluştur
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-preview-image-generation", 
       contents: contentParts,
@@ -75,7 +75,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
 
     console.log("Gemini response received successfully");
 
-    // Extract image data from response
+    // Yanıttan görsel verisini çıkar
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error("Gemini'den yanıt alınamadı");
@@ -86,7 +86,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       throw new Error("Gemini'den geçerli içerik alınamadı");
     }
 
-    // Find image part in response
+    // Yanıtta görsel kısmını bul
     let imageData = null;
     for (const part of content.parts) {
       if (part.text) {
@@ -102,7 +102,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
       throw new Error("Gemini'den görsel verisi alınamadı");
     }
 
-    // Convert to data URL
+    // Data URL'ye dönüştür
     const dataUrl = `data:image/png;base64,${imageData}`;
     console.log("Gemini image generated successfully");
 
@@ -111,7 +111,7 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
     console.error("Signage generation error:", error);
     console.error("Error message:", error?.message);
 
-    // Fallback to placeholder if anything fails
+    // Herhangi bir hata durumunda placeholder'a geri dön
     try {
       const fallbackImage = await createPlaceholderSignage(options);
       return { url: fallbackImage };
@@ -121,9 +121,9 @@ export async function generateSignageDesign(options: SignageGenerationOptions): 
   }
 }
 
-// Create a placeholder signage image using Node.js Canvas
+// Node.js Canvas kullanarak placeholder tabela görseli oluştur
 async function createPlaceholderSignage(options: SignageGenerationOptions): Promise<string> {
-  // For now, create a simple SVG-based placeholder
+  // Şimdilik basit SVG tabanlı placeholder oluştur
   const signageTypes: { [key: string]: { bg: string; text: string; effect: string } } = {
     'led': { bg: '#1E40AF', text: '#FFFFFF', effect: 'glow' },
     'neon': { bg: '#000000', text: '#FF0080', effect: 'neon' },
@@ -145,13 +145,13 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
         </filter>
       </defs>
 
-      <!-- Background -->
+      <!-- Arka Plan -->
       <rect x="50" y="50" width="700" height="200" rx="10" 
             fill="${signageStyle.bg}" 
             stroke="#CCCCCC" 
             stroke-width="2"/>
 
-      <!-- Business Name -->
+      <!-- İşletme Adı -->
       <text x="400" y="150" 
             text-anchor="middle" 
             dominant-baseline="middle"
@@ -163,7 +163,7 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
         ${options.text.toUpperCase()}
       </text>
 
-      <!-- Type Label -->
+      <!-- Tip Etiketi -->
       <text x="400" y="280" 
             text-anchor="middle" 
             font-family="Arial, sans-serif" 
@@ -174,7 +174,7 @@ async function createPlaceholderSignage(options: SignageGenerationOptions): Prom
     </svg>
   `;
 
-  // Convert SVG to base64 data URL
+  // SVG'yi base64 data URL'ye dönüştür
   const base64 = Buffer.from(svg).toString('base64');
   return `data:image/svg+xml;base64,${base64}`;
 }
@@ -237,7 +237,7 @@ function getSignageTypeDescription(type: string): string {
 
 export async function analyzeImageForSignage(imageBase64: string): Promise<string> {
   try {
-    // Simplified image analysis - return helpful generic response for now
+    // Basitleştirilmiş görsel analizi - şimdilik genel yararlı yanıt döndür
     return "Bu bina fotoğrafı tabela yerleştirme için uygun görünüyor. Bina cephesinin üst kısmında LED tabela, giriş bölümünde ışıklı kutu harf veya yan duvarlarda dijital baskı tabela yerleştirilebilir.";
   } catch (error) {
     console.error("Image analysis error:", error);
@@ -247,7 +247,7 @@ export async function analyzeImageForSignage(imageBase64: string): Promise<strin
 
 export async function analyzeReferenceSignage(imageBase64: string): Promise<string> {
   try {
-    // Placeholder for analyzing reference signage
+    // Referans tabela analizi için placeholder
     return "Referans tabela analizi tamamlandı. Benzer bir tasarım oluşturulacak.";
   } catch (error) {
     console.error("Reference signage analysis error:", error);

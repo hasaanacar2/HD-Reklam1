@@ -10,16 +10,16 @@ import {
 import { generateSignageDesign, analyzeImageForSignage } from "./ai-service";
 import { storage } from "./storage";
 
-// Mock storage for contact requests
+// İletişim talepleri için sahte depolama
 const contactRequests: any[] = [];
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Contact form submission endpoint
+  // İletişim formu gönderimi endpoint'i
   app.post("/api/contact", async (req, res) => {
     try {
       const validatedData = insertContactRequestSchema.parse(req.body);
       
-      // In a real application, this would be saved to a database
+      // Gerçek bir uygulamada bu veritabanına kaydedilir
       const contactRequest = {
         id: contactRequests.length + 1,
         ...validatedData,
@@ -49,12 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get contact requests (for admin purposes)
+  // İletişim taleplerini getir (admin amaçlı)
   app.get("/api/contact", async (req, res) => {
     res.json(contactRequests);
   });
 
-  // AI Signage generation endpoint
+  // AI Tabela üretimi endpoint'i
   app.post("/api/ai-signage/generate", async (req, res) => {
     try {
       const { text, type, style, colors, building_description, prompt } = req.body;
@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Image analysis endpoint
+  // Görsel analizi endpoint'i
   app.post("/api/ai-signage/analyze", async (req, res) => {
     try {
       const { image } = req.body;
@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Remove data:image/jpeg;base64, prefix if present
+      // Eğer varsa data:image/jpeg;base64, önekini kaldır
       const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, '');
       
       const analysis = await analyzeImageForSignage(base64Image);
@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reference signage analysis endpoint  
+  // Referans tabela analizi endpoint'i  
   app.post("/api/ai-signage/analyze-reference", async (req, res) => {
     try {
       const { image } = req.body;
@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Remove data:image/jpeg;base64, prefix if present
+      // Eğer varsa data:image/jpeg;base64, önekini kaldır
       const base64Image = image.replace(/^data:image\/[a-z]+;base64,/, '');
       
       const analysis = await analyzeImageForSignage(base64Image);
@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes for project management
+  // Proje yönetimi için admin rotaları
   app.get("/api/admin/projects", async (req, res) => {
     try {
       const projects = await storage.getProjects();
@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes for current accounts
+  // Cari hesaplar için admin rotaları
   app.get("/api/admin/accounts", async (req, res) => {
     try {
       const accounts = await storage.getCurrentAccounts();
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes for transactions
+  // İşlemler için admin rotaları
   app.get("/api/admin/transactions", async (req, res) => {
     try {
       const accountId = req.query.accountId ? parseInt(req.query.accountId as string) : undefined;
