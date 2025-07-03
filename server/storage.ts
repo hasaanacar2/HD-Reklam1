@@ -75,7 +75,22 @@ export class DatabaseStorage implements IStorage {
 
   // Project operations
   async getProjects(): Promise<Project[]> {
-    return await db.select().from(projects).orderBy(desc(projects.createdAt));
+    // Veritabanı bağlantısı için yeniden deneme mekanizması
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        return await db.select().from(projects).orderBy(desc(projects.createdAt));
+      } catch (error: any) {
+        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
+          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Veritabanı bağlantısı kurulamadı');
   }
 
   async getProject(id: number): Promise<Project | undefined> {
@@ -112,7 +127,22 @@ export class DatabaseStorage implements IStorage {
 
   // Current Account operations
   async getCurrentAccounts(): Promise<CurrentAccount[]> {
-    return await db.select().from(currentAccounts).orderBy(currentAccounts.name);
+    // Veritabanı bağlantısı için yeniden deneme mekanizması
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        return await db.select().from(currentAccounts).orderBy(currentAccounts.name);
+      } catch (error: any) {
+        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
+          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Veritabanı bağlantısı kurulamadı');
   }
 
   async getCurrentAccount(id: number): Promise<CurrentAccount | undefined> {
@@ -121,14 +151,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCurrentAccount(account: InsertCurrentAccount): Promise<CurrentAccount> {
-    const [newAccount] = await db
-      .insert(currentAccounts)
-      .values({
-        ...account,
-        updatedAt: new Date()
-      })
-      .returning();
-    return newAccount;
+    // Veritabanı bağlantısı için yeniden deneme mekanizması
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const [newAccount] = await db
+          .insert(currentAccounts)
+          .values({
+            ...account,
+            updatedAt: new Date()
+          })
+          .returning();
+        return newAccount;
+      } catch (error: any) {
+        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
+          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
+          retries--;
+          // 2 saniye bekle
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Veritabanı bağlantısı kurulamadı');
   }
 
   async updateCurrentAccount(id: number, account: Partial<InsertCurrentAccount>): Promise<CurrentAccount> {
@@ -214,14 +260,29 @@ export class DatabaseStorage implements IStorage {
 
   // Portfolio Project operations
   async getPortfolioProjects(activeOnly: boolean = false): Promise<PortfolioProject[]> {
-    if (activeOnly) {
-      return await db
-        .select()
-        .from(portfolioProjects)
-        .where(eq(portfolioProjects.isActive, true))
-        .orderBy(portfolioProjects.orderIndex);
+    // Veritabanı bağlantısı için yeniden deneme mekanizması
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        if (activeOnly) {
+          return await db
+            .select()
+            .from(portfolioProjects)
+            .where(eq(portfolioProjects.isActive, true))
+            .orderBy(portfolioProjects.orderIndex);
+        }
+        return await db.select().from(portfolioProjects).orderBy(portfolioProjects.orderIndex);
+      } catch (error: any) {
+        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
+          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        throw error;
+      }
     }
-    return await db.select().from(portfolioProjects).orderBy(portfolioProjects.orderIndex);
+    throw new Error('Veritabanı bağlantısı kurulamadı');
   }
 
   async getPortfolioProject(id: number): Promise<PortfolioProject | undefined> {

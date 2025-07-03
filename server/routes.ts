@@ -208,9 +208,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertCurrentAccountSchema.parse(req.body);
       const account = await storage.createCurrentAccount(validatedData);
       res.json(account);
-    } catch (error) {
-      console.error("Error creating account:", error);
-      res.status(500).json({ message: "Failed to create account" });
+    } catch (error: any) {
+      console.error("Cari hesap oluşturma hatası:", error);
+      if (error.code === 'XX000' && error.message?.includes('endpoint is disabled')) {
+        res.status(503).json({ message: "Veritabanı geçici olarak erişilemez durumda. Lütfen birkaç saniye sonra tekrar deneyin." });
+      } else if (error.message === 'Veritabanı bağlantısı kurulamadı') {
+        res.status(503).json({ message: "Veritabanı bağlantısı kurulamadı. Lütfen tekrar deneyin." });
+      } else {
+        res.status(500).json({ message: "Cari hesap oluşturulurken hata oluştu." });
+      }
     }
   });
 
