@@ -15,4 +15,4 @@ async function wakeDatabase() {
   }
 }
 
-wakeDatabase();
+wakeDatabase();keDatabase();
