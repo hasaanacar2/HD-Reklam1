@@ -257,7 +257,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/portfolio-projects", authenticateAdmin, async (req, res) => {
     try {
-      const project = await storage.createPortfolioProject(req.body);
+      const data = { ...req.body };
+      // Convert completionDate string to Date object if provided
+      if (data.completionDate) {
+        data.completionDate = new Date(data.completionDate);
+      }
+      const project = await storage.createPortfolioProject(data);
       res.json(project);
     } catch (error) {
       console.error("Error creating portfolio project:", error);
@@ -267,7 +272,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/portfolio-projects/:id", authenticateAdmin, async (req, res) => {
     try {
-      const project = await storage.updatePortfolioProject(parseInt(req.params.id), req.body);
+      const data = { ...req.body };
+      // Convert completionDate string to Date object if provided
+      if (data.completionDate) {
+        data.completionDate = new Date(data.completionDate);
+      }
+      const project = await storage.updatePortfolioProject(parseInt(req.params.id), data);
       res.json(project);
     } catch (error) {
       console.error("Error updating portfolio project:", error);
