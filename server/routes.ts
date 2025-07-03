@@ -240,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.transactionDate = new Date(data.transactionDate);
       }
       
+      console.log("Data after conversion:", data);
       const validatedData = insertTransactionSchema.parse(data);
       const transaction = await storage.createTransaction(validatedData);
       // Update account balance after creating transaction
