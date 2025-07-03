@@ -231,10 +231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Convert types to match schema expectations
       if (data.accountId) {
-        data.accountId = parseInt(data.accountId);
+        data.accountId = typeof data.accountId === 'string' ? parseInt(data.accountId) : data.accountId;
       }
-      if (data.amount !== undefined) {
-        data.amount = data.amount.toString();
+      if (data.amount !== undefined && data.amount !== null) {
+        data.amount = String(data.amount);
       }
       if (data.transactionDate) {
         data.transactionDate = new Date(data.transactionDate);
