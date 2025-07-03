@@ -9,8 +9,51 @@ import {
 } from "@shared/schema";
 import { generateSignageDesign, analyzeImageForSignage } from "./ai-service";
 import { storage } from "./storage";
+import { authenticateAdmin, generateToken, verifyPassword, hashPassword, AuthRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin login route
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Kullanıcı adı ve şifre gerekli." 
+        });
+      }
+      
+      // For demo purposes, using a simple check
+      // In production, you should store hashed passwords in database
+      if (username === 'admin' && password === 'HDreklam2025') {
+        const token = generateToken(username);
+        res.json({ 
+          success: true, 
+          token,
+          message: "Giriş başarılı." 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Geçersiz kullanıcı adı veya şifre." 
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Sunucu hatası oluştu." 
+      });
+    }
+  });
+
+  // Verify admin token
+  app.get("/api/admin/verify", authenticateAdmin, (req: AuthRequest, res) => {
+    res.json({ 
+      success: true, 
+      user: req.user 
+    });
+  });
   app.post("/api/contact", async (req, res) => {
     try {
       const validatedData = insertContactRequestSchema.parse(req.body);
@@ -122,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/projects", async (req, res) => {
+  app.get("/api/admin/projects", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const projects = await storage.getProjects();
       res.json(projects);
@@ -131,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/projects", async (req, res) => {
+  app.post("/api/admin/projects", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertProjectSchema.parse(req.body);
       const project = await storage.createProject(validatedData);
@@ -141,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/projects/:id", async (req, res) => {
+  app.delete("/api/admin/projects/:id", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProject(id);
@@ -151,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/accounts", async (req, res) => {
+  app.get("/api/admin/accounts", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const accounts = await storage.getCurrentAccounts();
       res.json(accounts);
@@ -160,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/accounts", async (req, res) => {
+  app.post("/api/admin/accounts", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertCurrentAccountSchema.parse(req.body);
       const account = await storage.createCurrentAccount(validatedData);
@@ -170,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/transactions", async (req, res) => {
+  app.get("/api/admin/transactions", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const accountId = req.query.accountId ? parseInt(req.query.accountId as string) : undefined;
       const transactions = await storage.getAccountTransactions(accountId);
@@ -180,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/transactions", async (req, res) => {
+  app.post("/api/admin/transactions", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction(validatedData);

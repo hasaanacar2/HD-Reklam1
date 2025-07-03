@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Trash2, Plus, Edit, Eye, Calculator, TrendingUp, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ContentEditor from "@/components/content-editor";
 
 interface Project {
   id: number;
@@ -59,7 +61,16 @@ interface AccountTransaction {
 export default function AdminPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("projects");
+  const [, setLocation] = useLocation();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      setLocation('/admin-login');
+    }
+  }, [setLocation]);
+  const [activeTab, setActiveTab] = useState("content");
   const [selectedAccount, setSelectedAccount] = useState<number | null>(null);
 
   // Project form state
@@ -95,11 +106,22 @@ export default function AdminPage() {
     transactionDate: new Date().toISOString().split('T')[0]
   });
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+  });
+
   // Queries
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["/api/admin/projects"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/projects");
+      const res = await fetch("/api/admin/projects", {
+        headers: getAuthHeaders()
+      });
+      if (res.status === 401) {
+        setLocation('/admin-login');
+        throw new Error("Unauthorized");
+      }
       if (!res.ok) throw new Error("Failed to fetch projects");
       return res.json();
     }
@@ -108,7 +130,13 @@ export default function AdminPage() {
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<CurrentAccount[]>({
     queryKey: ["/api/admin/accounts"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/accounts");
+      const res = await fetch("/api/admin/accounts", {
+        headers: getAuthHeaders()
+      });
+      if (res.status === 401) {
+        setLocation('/admin-login');
+        throw new Error("Unauthorized");
+      }
       if (!res.ok) throw new Error("Failed to fetch accounts");
       return res.json();
     }
@@ -118,16 +146,45 @@ export default function AdminPage() {
     queryKey: ["/api/admin/transactions", selectedAccount],
     enabled: selectedAccount !== null,
     queryFn: async () => {
-      const res = await fetch(`/api/admin/transactions?accountId=${selectedAccount}`);
+      const res = await fetch(`/api/admin/transactions?accountId=${selectedAccount}`, {
+        headers: getAuthHeaders()
+      });
+      if (res.status === 401) {
+        setLocation('/admin-login');
+        throw new Error("Unauthorized");
+      }
       if (!res.ok) throw new Error("Failed to fetch transactions");
       return res.json();
     }
   });
 
+  // Custom API request with auth headers
+  const apiRequestWithAuth = async (method: string, url: string, data?: any) => {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: data ? JSON.stringify(data) : undefined
+    });
+    
+    if (res.status === 401) {
+      setLocation('/admin-login');
+      throw new Error("Unauthorized");
+    }
+    
+    if (!res.ok) {
+      throw new Error(`Request failed: ${res.statusText}`);
+    }
+    
+    return res.json();
+  };
+
   // Mutations
   const createProjectMutation = useMutation({
     mutationFn: async (data: typeof projectForm) => {
-      return await apiRequest("POST", "/api/admin/projects", data);
+      return await apiRequestWithAuth("POST", "/api/admin/projects", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
@@ -153,7 +210,7 @@ export default function AdminPage() {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest("DELETE", `/api/admin/projects/${id}`);
+      return await apiRequestWithAuth("DELETE", `/api/admin/projects/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
@@ -166,7 +223,7 @@ export default function AdminPage() {
 
   const createAccountMutation = useMutation({
     mutationFn: async (data: typeof accountForm) => {
-      return await apiRequest("POST", "/api/admin/accounts", data);
+      return await apiRequestWithAuth("POST", "/api/admin/accounts", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/accounts"] });
@@ -186,7 +243,7 @@ export default function AdminPage() {
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: typeof transactionForm) => {
-      return await apiRequest("POST", "/api/admin/transactions", {
+      return await apiRequestWithAuth("POST", "/api/admin/transactions", {
         ...data,
         accountId: parseInt(data.accountId),
         amount: parseFloat(data.amount)
@@ -263,141 +320,17 @@ export default function AdminPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Paneli</h1>
-        <p className="text-gray-600 mt-2">Proje yönetimi ve cari hesap takibi</p>
+        <p className="text-gray-600 mt-2">İçerik düzenleme ve cari hesap takibi</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="projects">📋 Proje Yönetimi</TabsTrigger>
+          <TabsTrigger value="content">✏️ İçerik Editörü</TabsTrigger>
           <TabsTrigger value="accounts">💰 Cari Hesaplar</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="projects" className="mt-6">
-          <div className="grid gap-6">
-            {/* Add Project Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Yeni Proje Ekle
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateProject} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="projectName">Proje Adı</Label>
-                      <Input
-                        id="projectName"
-                        value={projectForm.name}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
-                        className="thin-border"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="clientName">Müşteri Adı</Label>
-                      <Input
-                        id="clientName"
-                        value={projectForm.clientName}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, clientName: e.target.value }))}
-                        className="thin-border"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="projectType">Proje Tipi</Label>
-                      <Select value={projectForm.projectType} onValueChange={(value) => setProjectForm(prev => ({ ...prev, projectType: value }))}>
-                        <SelectTrigger className="thin-border">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="signage">Tabela</SelectItem>
-                          <SelectItem value="digital">Dijital Baskı</SelectItem>
-                          <SelectItem value="banner">Banner</SelectItem>
-                          <SelectItem value="vehicle">Araç Giydirme</SelectItem>
-                          <SelectItem value="other">Diğer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="totalAmount">Toplam Tutar</Label>
-                      <Input
-                        id="totalAmount"
-                        type="number"
-                        step="0.01"
-                        value={projectForm.totalAmount}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, totalAmount: e.target.value }))}
-                        className="thin-border"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Açıklama</Label>
-                    <Textarea
-                      id="description"
-                      value={projectForm.description}
-                      onChange={(e) => setProjectForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="thin-border"
-                    />
-                  </div>
-                  <Button type="submit" disabled={createProjectMutation.isPending} className="w-full">
-                    {createProjectMutation.isPending ? "Ekleniyor..." : "Proje Ekle"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Projects List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Projeler</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {projectsLoading ? (
-                  <div>Yükleniyor...</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Proje Adı</TableHead>
-                          <TableHead>Müşteri</TableHead>
-                          <TableHead>Tip</TableHead>
-                          <TableHead>Durum</TableHead>
-                          <TableHead>Tutar</TableHead>
-                          <TableHead>İşlemler</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {projects.map((project: Project) => (
-                          <TableRow key={project.id}>
-                            <TableCell className="font-medium">{project.name}</TableCell>
-                            <TableCell>{project.clientName}</TableCell>
-                            <TableCell>{project.projectType}</TableCell>
-                            <TableCell>{getStatusBadge(project.status)}</TableCell>
-                            <TableCell>{project.totalAmount ? formatCurrency(project.totalAmount) : '-'}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => deleteProjectMutation.mutate(project.id)}
-                                  disabled={deleteProjectMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="content" className="mt-6">
+          <ContentEditor />
         </TabsContent>
 
         <TabsContent value="accounts" className="mt-6">
