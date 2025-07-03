@@ -1,3 +1,4 @@
+
 import { 
   users, 
   projects, 
@@ -15,7 +16,7 @@ import {
   type PortfolioProject,
   type InsertPortfolioProject
 } from "@shared/schema";
-import { db } from "./db";
+import { db, withDatabaseRetry } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -56,275 +57,260 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return withDatabaseRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    });
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    return withDatabaseRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user || undefined;
+    });
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values({ ...insertUser, isAdmin: false })
-      .returning();
-    return user;
+    return withDatabaseRetry(async () => {
+      const [user] = await db
+        .insert(users)
+        .values({ ...insertUser, isAdmin: false })
+        .returning();
+      return user;
+    });
   }
 
   // Project operations
   async getProjects(): Promise<Project[]> {
-    // Veritabanı bağlantısı için yeniden deneme mekanizması
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        return await db.select().from(projects).orderBy(desc(projects.createdAt));
-      } catch (error: any) {
-        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
-          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
-          retries--;
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-        throw error;
-      }
-    }
-    throw new Error('Veritabanı bağlantısı kurulamadı');
+    return withDatabaseRetry(async () => {
+      return await db.select().from(projects).orderBy(desc(projects.createdAt));
+    });
   }
 
   async getProject(id: number): Promise<Project | undefined> {
-    const [project] = await db.select().from(projects).where(eq(projects.id, id));
-    return project || undefined;
+    return withDatabaseRetry(async () => {
+      const [project] = await db.select().from(projects).where(eq(projects.id, id));
+      return project || undefined;
+    });
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    const [newProject] = await db
-      .insert(projects)
-      .values({
-        ...project,
-        updatedAt: new Date()
-      })
-      .returning();
-    return newProject;
+    return withDatabaseRetry(async () => {
+      const [newProject] = await db
+        .insert(projects)
+        .values({
+          ...project,
+          updatedAt: new Date()
+        })
+        .returning();
+      return newProject;
+    });
   }
 
   async updateProject(id: number, project: Partial<InsertProject>): Promise<Project> {
-    const [updatedProject] = await db
-      .update(projects)
-      .set({
-        ...project,
-        updatedAt: new Date()
-      })
-      .where(eq(projects.id, id))
-      .returning();
-    return updatedProject;
+    return withDatabaseRetry(async () => {
+      const [updatedProject] = await db
+        .update(projects)
+        .set({
+          ...project,
+          updatedAt: new Date()
+        })
+        .where(eq(projects.id, id))
+        .returning();
+      return updatedProject;
+    });
   }
 
   async deleteProject(id: number): Promise<void> {
-    await db.delete(projects).where(eq(projects.id, id));
+    return withDatabaseRetry(async () => {
+      await db.delete(projects).where(eq(projects.id, id));
+    });
   }
 
   // Current Account operations
   async getCurrentAccounts(): Promise<CurrentAccount[]> {
-    // Veritabanı bağlantısı için yeniden deneme mekanizması
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        return await db.select().from(currentAccounts).orderBy(currentAccounts.name);
-      } catch (error: any) {
-        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
-          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
-          retries--;
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-        throw error;
-      }
-    }
-    throw new Error('Veritabanı bağlantısı kurulamadı');
+    return withDatabaseRetry(async () => {
+      return await db.select().from(currentAccounts).orderBy(currentAccounts.name);
+    });
   }
 
   async getCurrentAccount(id: number): Promise<CurrentAccount | undefined> {
-    const [account] = await db.select().from(currentAccounts).where(eq(currentAccounts.id, id));
-    return account || undefined;
+    return withDatabaseRetry(async () => {
+      const [account] = await db.select().from(currentAccounts).where(eq(currentAccounts.id, id));
+      return account || undefined;
+    });
   }
 
   async createCurrentAccount(account: InsertCurrentAccount): Promise<CurrentAccount> {
-    // Veritabanı bağlantısı için yeniden deneme mekanizması
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        const [newAccount] = await db
-          .insert(currentAccounts)
-          .values({
-            ...account,
-            updatedAt: new Date()
-          })
-          .returning();
-        return newAccount;
-      } catch (error: any) {
-        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
-          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
-          retries--;
-          // 2 saniye bekle
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-        throw error;
-      }
-    }
-    throw new Error('Veritabanı bağlantısı kurulamadı');
+    return withDatabaseRetry(async () => {
+      const [newAccount] = await db
+        .insert(currentAccounts)
+        .values({
+          ...account,
+          updatedAt: new Date()
+        })
+        .returning();
+      return newAccount;
+    });
   }
 
   async updateCurrentAccount(id: number, account: Partial<InsertCurrentAccount>): Promise<CurrentAccount> {
-    const [updatedAccount] = await db
-      .update(currentAccounts)
-      .set({
-        ...account,
-        updatedAt: new Date()
-      })
-      .where(eq(currentAccounts.id, id))
-      .returning();
-    return updatedAccount;
+    return withDatabaseRetry(async () => {
+      const [updatedAccount] = await db
+        .update(currentAccounts)
+        .set({
+          ...account,
+          updatedAt: new Date()
+        })
+        .where(eq(currentAccounts.id, id))
+        .returning();
+      return updatedAccount;
+    });
   }
 
   async deleteCurrentAccount(id: number): Promise<void> {
-    await db.delete(currentAccounts).where(eq(currentAccounts.id, id));
+    return withDatabaseRetry(async () => {
+      await db.delete(currentAccounts).where(eq(currentAccounts.id, id));
+    });
   }
 
   // Transaction operations
   async getAccountTransactions(accountId?: number): Promise<AccountTransaction[]> {
-    if (accountId) {
+    return withDatabaseRetry(async () => {
+      if (accountId) {
+        return await db
+          .select()
+          .from(accountTransactions)
+          .where(eq(accountTransactions.accountId, accountId))
+          .orderBy(desc(accountTransactions.transactionDate));
+      }
       return await db
         .select()
         .from(accountTransactions)
-        .where(eq(accountTransactions.accountId, accountId))
         .orderBy(desc(accountTransactions.transactionDate));
-    }
-    return await db
-      .select()
-      .from(accountTransactions)
-      .orderBy(desc(accountTransactions.transactionDate));
+    });
   }
 
   async createTransaction(transaction: InsertTransaction): Promise<AccountTransaction> {
-    const [newTransaction] = await db
-      .insert(accountTransactions)
-      .values(transaction)
-      .returning();
-    
-    // Update account balance
-    await this.updateAccountBalance(transaction.accountId);
-    
-    return newTransaction;
+    return withDatabaseRetry(async () => {
+      const [newTransaction] = await db
+        .insert(accountTransactions)
+        .values(transaction)
+        .returning();
+      
+      // Update account balance
+      await this.updateAccountBalance(transaction.accountId);
+      
+      return newTransaction;
+    });
   }
 
   async deleteTransaction(id: number): Promise<void> {
-    const [transaction] = await db
-      .select()
-      .from(accountTransactions)
-      .where(eq(accountTransactions.id, id));
-    
-    if (transaction) {
-      await db.delete(accountTransactions).where(eq(accountTransactions.id, id));
-      await this.updateAccountBalance(transaction.accountId);
-    }
+    return withDatabaseRetry(async () => {
+      const [transaction] = await db
+        .select()
+        .from(accountTransactions)
+        .where(eq(accountTransactions.id, id));
+      
+      if (transaction) {
+        await db.delete(accountTransactions).where(eq(accountTransactions.id, id));
+        await this.updateAccountBalance(transaction.accountId);
+      }
+    });
   }
 
   async updateAccountBalance(accountId: number): Promise<void> {
-    // Calculate totals for this account
-    const result = await db
-      .select({
-        totalDebt: sql`SUM(CASE WHEN type IN ('debt', 'payment_made') THEN amount ELSE 0 END)`,
-        totalCredit: sql`SUM(CASE WHEN type IN ('credit', 'payment_received') THEN amount ELSE 0 END)`
-      })
-      .from(accountTransactions)
-      .where(eq(accountTransactions.accountId, accountId));
+    return withDatabaseRetry(async () => {
+      // Calculate totals for this account
+      const result = await db
+        .select({
+          totalDebt: sql`SUM(CASE WHEN type IN ('debt', 'payment_made') THEN amount ELSE 0 END)`,
+          totalCredit: sql`SUM(CASE WHEN type IN ('credit', 'payment_received') THEN amount ELSE 0 END)`
+        })
+        .from(accountTransactions)
+        .where(eq(accountTransactions.accountId, accountId));
 
-    const totals = result[0];
-    const totalDebt = Number(totals?.totalDebt || 0);
-    const totalCredit = Number(totals?.totalCredit || 0);
-    const balance = totalDebt - totalCredit; // positive = they owe us, negative = we owe them
+      const totals = result[0];
+      const totalDebt = Number(totals?.totalDebt || 0);
+      const totalCredit = Number(totals?.totalCredit || 0);
+      const balance = totalDebt - totalCredit; // positive = they owe us, negative = we owe them
 
-    await db
-      .update(currentAccounts)
-      .set({
-        totalDebt: totalDebt.toString(),
-        totalCredit: totalCredit.toString(),
-        balance: balance.toString(),
-        updatedAt: new Date()
-      })
-      .where(eq(currentAccounts.id, accountId));
+      await db
+        .update(currentAccounts)
+        .set({
+          totalDebt: totalDebt.toString(),
+          totalCredit: totalCredit.toString(),
+          balance: balance.toString(),
+          updatedAt: new Date()
+        })
+        .where(eq(currentAccounts.id, accountId));
+    });
   }
 
   // Portfolio Project operations
   async getPortfolioProjects(activeOnly: boolean = false): Promise<PortfolioProject[]> {
-    // Veritabanı bağlantısı için yeniden deneme mekanizması
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        if (activeOnly) {
-          return await db
-            .select()
-            .from(portfolioProjects)
-            .where(eq(portfolioProjects.isActive, true))
-            .orderBy(portfolioProjects.orderIndex);
-        }
-        return await db.select().from(portfolioProjects).orderBy(portfolioProjects.orderIndex);
-      } catch (error: any) {
-        if (error.code === 'XX000' && error.message?.includes('endpoint is disabled') && retries > 1) {
-          console.log(`Veritabanı bağlantı hatası, yeniden deneniyor... (${retries - 1} deneme kaldı)`);
-          retries--;
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-        throw error;
+    return withDatabaseRetry(async () => {
+      if (activeOnly) {
+        return await db
+          .select()
+          .from(portfolioProjects)
+          .where(eq(portfolioProjects.isActive, true))
+          .orderBy(portfolioProjects.orderIndex);
       }
-    }
-    throw new Error('Veritabanı bağlantısı kurulamadı');
+      return await db.select().from(portfolioProjects).orderBy(portfolioProjects.orderIndex);
+    });
   }
 
   async getPortfolioProject(id: number): Promise<PortfolioProject | undefined> {
-    const [project] = await db.select().from(portfolioProjects).where(eq(portfolioProjects.id, id));
-    return project || undefined;
+    return withDatabaseRetry(async () => {
+      const [project] = await db.select().from(portfolioProjects).where(eq(portfolioProjects.id, id));
+      return project || undefined;
+    });
   }
 
   async createPortfolioProject(project: InsertPortfolioProject): Promise<PortfolioProject> {
-    const [newProject] = await db
-      .insert(portfolioProjects)
-      .values({
-        ...project,
-        updatedAt: new Date()
-      })
-      .returning();
-    return newProject;
+    return withDatabaseRetry(async () => {
+      const [newProject] = await db
+        .insert(portfolioProjects)
+        .values({
+          ...project,
+          updatedAt: new Date()
+        })
+        .returning();
+      return newProject;
+    });
   }
 
   async updatePortfolioProject(id: number, project: Partial<InsertPortfolioProject>): Promise<PortfolioProject> {
-    const [updatedProject] = await db
-      .update(portfolioProjects)
-      .set({
-        ...project,
-        updatedAt: new Date()
-      })
-      .where(eq(portfolioProjects.id, id))
-      .returning();
-    return updatedProject;
+    return withDatabaseRetry(async () => {
+      const [updatedProject] = await db
+        .update(portfolioProjects)
+        .set({
+          ...project,
+          updatedAt: new Date()
+        })
+        .where(eq(portfolioProjects.id, id))
+        .returning();
+      return updatedProject;
+    });
   }
 
   async deletePortfolioProject(id: number): Promise<void> {
-    await db.delete(portfolioProjects).where(eq(portfolioProjects.id, id));
+    return withDatabaseRetry(async () => {
+      await db.delete(portfolioProjects).where(eq(portfolioProjects.id, id));
+    });
   }
 
   async updatePortfolioProjectOrder(projectIds: number[]): Promise<void> {
-    // Update order index for each project
-    for (let i = 0; i < projectIds.length; i++) {
-      await db
-        .update(portfolioProjects)
-        .set({ orderIndex: i, updatedAt: new Date() })
-        .where(eq(portfolioProjects.id, projectIds[i]));
-    }
+    return withDatabaseRetry(async () => {
+      // Update order index for each project
+      for (let i = 0; i < projectIds.length; i++) {
+        await db
+          .update(portfolioProjects)
+          .set({ orderIndex: i, updatedAt: new Date() })
+          .where(eq(portfolioProjects.id, projectIds[i]));
+      }
+    });
   }
 }
 
