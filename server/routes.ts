@@ -209,6 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const account = await storage.createCurrentAccount(validatedData);
       res.json(account);
     } catch (error) {
+      console.error("Error creating account:", error);
       res.status(500).json({ message: "Failed to create account" });
     }
   });

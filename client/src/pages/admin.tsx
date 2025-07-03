@@ -236,8 +236,9 @@ export default function AdminPage() {
       });
       toast({ title: "Cari hesap eklendi" });
     },
-    onError: () => {
-      toast({ title: "Cari hesap eklenemedi", variant: "destructive" });
+    onError: (error: any) => {
+      console.error("Account creation error:", error);
+      toast({ title: "Cari hesap eklenemedi", description: error.message, variant: "destructive" });
     }
   });
 
@@ -299,6 +300,10 @@ export default function AdminPage() {
       style: 'currency',
       currency: 'TRY'
     }).format(typeof amount === 'string' ? parseFloat(amount) : amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR');
   };
 
   const handleCreateProject = (e: React.FormEvent) => {
@@ -449,6 +454,92 @@ export default function AdminPage() {
                         </Card>
                       ))}
                     </div>
+
+                    {/* Selected Account Transactions */}
+                    {selectedAccount && (
+                      <div className="mt-4 space-y-4">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>İşlem Geçmişi - {accounts.find(a => a.id === selectedAccount)?.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {transactionsLoading ? (
+                              <div>Yükleniyor...</div>
+                            ) : (
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Borçlar Tablosu */}
+                                <div>
+                                  <h4 className="font-semibold mb-3 text-red-600">Borçlar</h4>
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Tarih</TableHead>
+                                        <TableHead>Açıklama</TableHead>
+                                        <TableHead className="text-right">Tutar</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {transactions
+                                        .filter(t => t.type === 'debt' || t.type === 'payment_made')
+                                        .map((transaction) => (
+                                          <TableRow key={transaction.id}>
+                                            <TableCell className="text-sm">{formatDate(transaction.transactionDate)}</TableCell>
+                                            <TableCell className="text-sm">{transaction.description}</TableCell>
+                                            <TableCell className="text-right font-semibold text-red-600">
+                                              {formatCurrency(transaction.amount)}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      {transactions.filter(t => t.type === 'debt' || t.type === 'payment_made').length === 0 && (
+                                        <TableRow>
+                                          <TableCell colSpan={3} className="text-center text-gray-500">
+                                            Borç kaydı bulunmuyor
+                                          </TableCell>
+                                        </TableRow>
+                                      )}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+
+                                {/* Alacaklar Tablosu */}
+                                <div>
+                                  <h4 className="font-semibold mb-3 text-green-600">Alacaklar</h4>
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Tarih</TableHead>
+                                        <TableHead>Açıklama</TableHead>
+                                        <TableHead className="text-right">Tutar</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {transactions
+                                        .filter(t => t.type === 'credit' || t.type === 'payment_received')
+                                        .map((transaction) => (
+                                          <TableRow key={transaction.id}>
+                                            <TableCell className="text-sm">{formatDate(transaction.transactionDate)}</TableCell>
+                                            <TableCell className="text-sm">{transaction.description}</TableCell>
+                                            <TableCell className="text-right font-semibold text-green-600">
+                                              {formatCurrency(transaction.amount)}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      {transactions.filter(t => t.type === 'credit' || t.type === 'payment_received').length === 0 && (
+                                        <TableRow>
+                                          <TableCell colSpan={3} className="text-center text-gray-500">
+                                            Alacak kaydı bulunmuyor
+                                          </TableCell>
+                                        </TableRow>
+                                      )}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
 
                     {/* Transaction Form */}
                     <Card>
