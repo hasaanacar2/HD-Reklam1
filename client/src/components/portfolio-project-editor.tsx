@@ -147,17 +147,30 @@ export default function PortfolioProjectEditor() {
     }
   });
 
-  const handleEdit = (project: PortfolioProject) => {
-    setEditingProject(project);
-    setFormData({
-      title: project.title,
-      description: project.description || '',
-      imageUrl: project.imageUrl || '',
-      category: project.category || '',
-      clientName: project.clientName || '',
-      completionDate: project.completionDate ? new Date(project.completionDate).toISOString().split('T')[0] : '',
-      isActive: project.isActive
-    });
+  const handleEdit = (project: PortfolioProject | null) => {
+    if (project) {
+      setEditingProject(project);
+      setFormData({
+        title: project.title,
+        description: project.description || '',
+        imageUrl: project.imageUrl || '',
+        category: project.category || '',
+        clientName: project.clientName || '',
+        completionDate: project.completionDate ? new Date(project.completionDate).toISOString().split('T')[0] : '',
+        isActive: project.isActive
+      });
+    } else {
+      setEditingProject(null);
+      setFormData({
+        title: '',
+        description: '',
+        imageUrl: '',
+        category: '',
+        clientName: '',
+        completionDate: '',
+        isActive: true
+      });
+    }
     setIsDialogOpen(true);
   };
 
@@ -202,7 +215,7 @@ export default function PortfolioProjectEditor() {
           <CardTitle>Portföy Projeleri</CardTitle>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleEdit(null as any)}>
+              <Button onClick={() => handleEdit(null)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Yeni Proje
               </Button>
