@@ -233,6 +233,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Portfolio Projects API Routes
+  app.get("/api/portfolio-projects", async (req, res) => {
+    try {
+      const activeOnly = req.query.active === 'true';
+      const projects = await storage.getPortfolioProjects(activeOnly);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching portfolio projects:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio projects" });
+    }
+  });
+
+  app.get("/api/admin/portfolio-projects", authenticateAdmin, async (req, res) => {
+    try {
+      const projects = await storage.getPortfolioProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching portfolio projects:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio projects" });
+    }
+  });
+
+  app.post("/api/admin/portfolio-projects", authenticateAdmin, async (req, res) => {
+    try {
+      const project = await storage.createPortfolioProject(req.body);
+      res.json(project);
+    } catch (error) {
+      console.error("Error creating portfolio project:", error);
+      res.status(500).json({ message: "Failed to create portfolio project" });
+    }
+  });
+
+  app.put("/api/admin/portfolio-projects/:id", authenticateAdmin, async (req, res) => {
+    try {
+      const project = await storage.updatePortfolioProject(parseInt(req.params.id), req.body);
+      res.json(project);
+    } catch (error) {
+      console.error("Error updating portfolio project:", error);
+      res.status(500).json({ message: "Failed to update portfolio project" });
+    }
+  });
+
+  app.delete("/api/admin/portfolio-projects/:id", authenticateAdmin, async (req, res) => {
+    try {
+      await storage.deletePortfolioProject(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting portfolio project:", error);
+      res.status(500).json({ message: "Failed to delete portfolio project" });
+    }
+  });
+
+  app.put("/api/admin/portfolio-projects/reorder", authenticateAdmin, async (req, res) => {
+    try {
+      const { projectIds } = req.body;
+      await storage.updatePortfolioProjectOrder(projectIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering portfolio projects:", error);
+      res.status(500).json({ message: "Failed to reorder portfolio projects" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

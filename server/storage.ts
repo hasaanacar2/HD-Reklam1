@@ -3,6 +3,7 @@ import {
   projects, 
   currentAccounts, 
   accountTransactions,
+  portfolioProjects,
   type User, 
   type InsertUser,
   type Project,
@@ -10,7 +11,9 @@ import {
   type CurrentAccount,
   type InsertCurrentAccount,
   type AccountTransaction,
-  type InsertTransaction
+  type InsertTransaction,
+  type PortfolioProject,
+  type InsertPortfolioProject
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -40,6 +43,14 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<AccountTransaction>;
   deleteTransaction(id: number): Promise<void>;
   updateAccountBalance(accountId: number): Promise<void>;
+  
+  // Portfolio Project operations
+  getPortfolioProjects(activeOnly?: boolean): Promise<PortfolioProject[]>;
+  getPortfolioProject(id: number): Promise<PortfolioProject | undefined>;
+  createPortfolioProject(project: InsertPortfolioProject): Promise<PortfolioProject>;
+  updatePortfolioProject(id: number, project: Partial<InsertPortfolioProject>): Promise<PortfolioProject>;
+  deletePortfolioProject(id: number): Promise<void>;
+  updatePortfolioProjectOrder(projectIds: number[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -199,6 +210,60 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(currentAccounts.id, accountId));
+  }
+
+  // Portfolio Project operations
+  async getPortfolioProjects(activeOnly: boolean = false): Promise<PortfolioProject[]> {
+    if (activeOnly) {
+      return await db
+        .select()
+        .from(portfolioProjects)
+        .where(eq(portfolioProjects.isActive, true))
+        .orderBy(portfolioProjects.orderIndex);
+    }
+    return await db.select().from(portfolioProjects).orderBy(portfolioProjects.orderIndex);
+  }
+
+  async getPortfolioProject(id: number): Promise<PortfolioProject | undefined> {
+    const [project] = await db.select().from(portfolioProjects).where(eq(portfolioProjects.id, id));
+    return project || undefined;
+  }
+
+  async createPortfolioProject(project: InsertPortfolioProject): Promise<PortfolioProject> {
+    const [newProject] = await db
+      .insert(portfolioProjects)
+      .values({
+        ...project,
+        updatedAt: new Date()
+      })
+      .returning();
+    return newProject;
+  }
+
+  async updatePortfolioProject(id: number, project: Partial<InsertPortfolioProject>): Promise<PortfolioProject> {
+    const [updatedProject] = await db
+      .update(portfolioProjects)
+      .set({
+        ...project,
+        updatedAt: new Date()
+      })
+      .where(eq(portfolioProjects.id, id))
+      .returning();
+    return updatedProject;
+  }
+
+  async deletePortfolioProject(id: number): Promise<void> {
+    await db.delete(portfolioProjects).where(eq(portfolioProjects.id, id));
+  }
+
+  async updatePortfolioProjectOrder(projectIds: number[]): Promise<void> {
+    // Update order index for each project
+    for (let i = 0; i < projectIds.length; i++) {
+      await db
+        .update(portfolioProjects)
+        .set({ orderIndex: i, updatedAt: new Date() })
+        .where(eq(portfolioProjects.id, projectIds[i]));
+    }
   }
 }
 

@@ -100,7 +100,16 @@ A unique feature that allows customers to:
 - Replit-specific configuration for cloud deployment
 
 ## Changelog
-- July 3, 2025: Admin panel and business management system
+- January 3, 2025: Portfolio project management system
+  - Created portfolio_projects table with title, description, image, category, client, and ordering support
+  - Implemented full CRUD operations for portfolio projects with admin authentication
+  - Added drag-and-drop reordering functionality in admin panel
+  - Created PortfolioProjectEditor component for managing projects
+  - Updated portfolio section to display database projects with pagination and auto-scroll
+  - Integrated side navigation arrows and page indicators for better UX
+  - Projects can be toggled active/inactive for visibility control
+  - Admin can add project images, categories, client names, and completion dates
+- January 3, 2025: Admin panel and business management system
   - Added comprehensive admin panel (/admin) with project and account management
   - Implemented PostgreSQL database with projects, current accounts, and transactions tables
   - Created DatabaseStorage system replacing MemStorage for production readiness

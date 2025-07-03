@@ -101,3 +101,27 @@ export type InsertCurrentAccount = z.infer<typeof insertCurrentAccountSchema>;
 export type CurrentAccount = typeof currentAccounts.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type AccountTransaction = typeof accountTransactions.$inferSelect;
+
+// Portfolio Projects table
+export const portfolioProjects = pgTable("portfolio_projects", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  category: varchar("category", { length: 100 }),
+  clientName: varchar("client_name", { length: 255 }),
+  completionDate: timestamp("completion_date"),
+  orderIndex: integer("order_index").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const insertPortfolioProjectSchema = createInsertSchema(portfolioProjects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type InsertPortfolioProject = z.infer<typeof insertPortfolioProjectSchema>;
+export type PortfolioProject = typeof portfolioProjects.$inferSelect;
