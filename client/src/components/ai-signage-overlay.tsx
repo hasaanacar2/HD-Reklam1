@@ -375,7 +375,6 @@ export default function AISignageOverlay() {
                     <Label htmlFor="has-logo">Firma logosu için yer bırak</Label>
                   </div>
 
-                  {/* İletişim Bilgileri */}
                   <div className="space-y-3">
                     <Label className="text-base font-medium">İletişim Bilgileri (İsteğe Bağlı)</Label>
 

@@ -83,7 +83,6 @@ export default function ContactSection() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
           <div className="space-y-8">
             <div className="flex items-start">
               <div className="bg-primary text-white w-12 h-12 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
@@ -128,7 +127,6 @@ export default function ContactSection() {
               </div>
             </div>
 
-            {/* WhatsApp CTA */}
             <div className="bg-gradient-to-r from-success to-green-600 rounded-xl p-6 text-white">
               <h3 className="text-xl font-semibold mb-3">Hızlı İletişim</h3>
               <p className="mb-4">WhatsApp üzerinden anında iletişime geçin!</p>
@@ -142,7 +140,6 @@ export default function ContactSection() {
             </div>
           </div>
 
-          {/* Contact Form */}
           <div className="bg-gray-50 rounded-xl p-8">
             <h3 className="text-2xl font-semibold text-gray-900 mb-6">Teklif Talep Formu</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
