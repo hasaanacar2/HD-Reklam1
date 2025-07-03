@@ -428,43 +428,93 @@ export default function AdminPage() {
                   <div>Yükleniyor...</div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {accounts.map((account: CurrentAccount) => (
-                        <Card key={account.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelectedAccount(account.id)}>
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start">
-                              <CardTitle className="text-lg">{account.name}</CardTitle>
-                              {getAccountTypeBadge(account.accountType)}
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">Bakiye:</span>
-                                <span className={`font-semibold ${parseFloat(account.balance) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatCurrency(account.balance)}
-                                  {parseFloat(account.balance) >= 0 ? 
-                                    <TrendingUp className="inline h-4 w-4 ml-1" /> : 
-                                    <TrendingDown className="inline h-4 w-4 ml-1" />
-                                  }
-                                </span>
+                    {/* Scrollable Accounts */}
+                    <div className="overflow-x-auto pb-4">
+                      <div className="flex gap-4 min-w-max">
+                        {accounts.map((account: CurrentAccount) => (
+                          <Card 
+                            key={account.id} 
+                            className={`cursor-pointer hover:bg-gray-50 min-w-[300px] ${selectedAccount === account.id ? 'ring-2 ring-blue-500' : ''}`} 
+                            onClick={() => setSelectedAccount(account.id)}
+                          >
+                            <CardHeader className="pb-3">
+                              <div className="flex justify-between items-start">
+                                <CardTitle className="text-lg">{account.name}</CardTitle>
+                                {getAccountTypeBadge(account.accountType)}
                               </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Borç:</span>
-                                <span>{formatCurrency(account.totalDebt)}</span>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-gray-600">Bakiye:</span>
+                                  <span className={`font-semibold ${parseFloat(account.balance) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatCurrency(account.balance)}
+                                    {parseFloat(account.balance) >= 0 ? 
+                                      <TrendingUp className="inline h-4 w-4 ml-1" /> : 
+                                      <TrendingDown className="inline h-4 w-4 ml-1" />
+                                    }
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Borç:</span>
+                                  <span>{formatCurrency(account.totalDebt)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600">Alacak:</span>
+                                  <span>{formatCurrency(account.totalCredit)}</span>
+                                </div>
                               </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Alacak:</span>
-                                <span>{formatCurrency(account.totalCredit)}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
+                    
+                    {/* Total Summary */}
+                    <Card className="bg-gray-50">
+                      <CardHeader>
+                        <CardTitle className="text-lg">Genel Toplam</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <p className="text-sm text-gray-600 mb-1">Toplam Borç</p>
+                            <p className="text-xl font-bold text-red-600">
+                              {formatCurrency(
+                                accounts.reduce((sum, acc) => sum + parseFloat(acc.totalDebt), 0)
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-gray-600 mb-1">Toplam Alacak</p>
+                            <p className="text-xl font-bold text-green-600">
+                              {formatCurrency(
+                                accounts.reduce((sum, acc) => sum + parseFloat(acc.totalCredit), 0)
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-gray-600 mb-1">Net Bakiye</p>
+                            <p className={`text-xl font-bold ${
+                              accounts.reduce((sum, acc) => sum + parseFloat(acc.balance), 0) >= 0 
+                                ? 'text-green-600' 
+                                : 'text-red-600'
+                            }`}>
+                              {formatCurrency(
+                                accounts.reduce((sum, acc) => sum + parseFloat(acc.balance), 0)
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-                    {/* Selected Account Transactions */}
-                    {selectedAccount && (
+            {/* Selected Account Transactions */}
+            {selectedAccount && (
                       <div className="mt-4 space-y-4">
                         <Card>
                           <CardHeader>
@@ -631,8 +681,6 @@ export default function AdminPage() {
                     </Card>
                   </div>
                 )}
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
       </Tabs>
