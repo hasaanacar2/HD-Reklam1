@@ -226,10 +226,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/transactions", authenticateAdmin, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertTransactionSchema.parse(req.body);
+      console.log("Transaction request body:", req.body);
+      const data = { ...req.body };
+      // Convert transactionDate string to Date object if provided
+      if (data.transactionDate) {
+        data.transactionDate = new Date(data.transactionDate);
+      }
+      const validatedData = insertTransactionSchema.parse(data);
       const transaction = await storage.createTransaction(validatedData);
+      // Update account balance after creating transaction
+      await storage.updateAccountBalance(validatedData.accountId);
       res.json(transaction);
     } catch (error) {
+      console.error("Error creating transaction:", error);
       res.status(500).json({ message: "Failed to create transaction" });
     }
   });
