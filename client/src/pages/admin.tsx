@@ -318,6 +318,14 @@ export default function AdminPage() {
 
   const handleCreateTransaction = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!transactionForm.accountId) {
+      toast({ title: "Lütfen bir cari hesap seçin", variant: "destructive" });
+      return;
+    }
+    if (!transactionForm.amount || parseFloat(transactionForm.amount) <= 0) {
+      toast({ title: "Lütfen geçerli bir tutar girin", variant: "destructive" });
+      return;
+    }
     createTransactionMutation.mutate(transactionForm);
   };
 

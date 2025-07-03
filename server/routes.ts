@@ -228,10 +228,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Transaction request body:", req.body);
       const data = { ...req.body };
-      // Convert transactionDate string to Date object if provided
+      
+      // Convert types to match schema expectations
+      if (data.accountId) {
+        data.accountId = parseInt(data.accountId);
+      }
+      if (data.amount !== undefined) {
+        data.amount = data.amount.toString();
+      }
       if (data.transactionDate) {
         data.transactionDate = new Date(data.transactionDate);
       }
+      
       const validatedData = insertTransactionSchema.parse(data);
       const transaction = await storage.createTransaction(validatedData);
       // Update account balance after creating transaction
