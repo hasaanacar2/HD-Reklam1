@@ -24,6 +24,8 @@ export default function ContactSection() {
     serviceType: "",
     message: ""
   });
+  const [humanCheck, setHumanCheck] = useState("");
+  const [humanCheckError, setHumanCheckError] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,6 +46,8 @@ export default function ContactSection() {
         serviceType: "",
         message: ""
       });
+      setHumanCheck("");
+      setHumanCheckError("");
       queryClient.invalidateQueries({ queryKey: ["/api/contact"] });
     },
     onError: () => {
@@ -65,6 +69,11 @@ export default function ContactSection() {
       });
       return;
     }
+    if (humanCheck.trim() !== "7") {
+      setHumanCheckError("Lütfen robot olmadığınızı doğrulayın.");
+      return;
+    }
+    setHumanCheckError("");
     submitContactForm.mutate(formData);
   };
 
@@ -140,7 +149,18 @@ export default function ContactSection() {
 
           <div className="bg-gray-50 rounded-xl p-8">
             <h3 className="text-2xl font-semibold text-gray-900 mb-6">Teklif Talep Formu</h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (humanCheck.trim() !== "7") {
+                  setHumanCheckError("Lütfen robot olmadığınızı doğrulayın.");
+                  return;
+                }
+                setHumanCheckError("");
+                submitContactForm.mutate(formData);
+              }}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="name">Ad Soyad</Label>
@@ -200,6 +220,21 @@ export default function ContactSection() {
                   onChange={(e) => handleInputChange("message", e.target.value)}
                   placeholder="Projeniz hakkında detaylı bilgi verin..."
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="human-check">Robot musunuz? 3 + 4 = ?</Label>
+                <Input
+                  id="human-check"
+                  type="text"
+                  value={humanCheck}
+                  onChange={e => setHumanCheck(e.target.value)}
+                  placeholder="Cevabı yazınız"
+                  required
+                />
+                {humanCheckError && (
+                  <div className="text-red-500 text-xs mt-1">{humanCheckError}</div>
+                )}
               </div>
 
               <Button 

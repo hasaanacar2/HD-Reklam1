@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -248,7 +247,7 @@ export default function AISignageOverlay() {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">🤖 AI Tabela Tasarımcısı</h2>
           <p className="text-xl text-secondary max-w-3xl mx-auto">
-            Ücretsiz Hugging Face AI teknolojisi ile işletmeniz için profesyonel tabela tasarımları oluşturun.
+            Ücretsiz Gemini AI teknolojisi ile işletmeniz için profesyonel tabela tasarımları oluşturun.
           </p>
         </div>
 
@@ -550,7 +549,7 @@ export default function AISignageOverlay() {
                 <div className="border-2 border-dashed border-blue-300 rounded-xl p-12 text-center bg-blue-50">
                   <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
                   <p className="text-blue-700 text-lg font-medium">
-                    🤖 Hugging Face AI tabela tasarımınızı oluşturuyor...
+                    🤖 Gemini AI tabela tasarımınızı oluşturuyor...
                   </p>
                   <p className="text-blue-600 text-sm mt-2">
                     Bu işlem 5-10 saniye sürebilir
