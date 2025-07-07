@@ -17,7 +17,7 @@ import {
   type InsertPortfolioProject
 } from "@shared/schema";
 import { db, withDatabaseRetry } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -191,17 +191,50 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async createTransaction(transaction: InsertTransaction): Promise<AccountTransaction> {
+  async createTransaction(transaction: Omit<InsertTransaction, 'id' | 'createdAt'>): Promise<AccountTransaction> {
     return withDatabaseRetry(async () => {
       const [newTransaction] = await db
         .insert(accountTransactions)
-        .values(transaction)
+        .values({
+          ...transaction,
+          createdAt: new Date(),
+        })
         .returning();
       
-      // Update account balance
-      await this.updateAccountBalance(transaction.accountId);
+      // Update account balance if accountId exists
+      if (transaction.accountId) {
+        await this.updateAccountBalance(transaction.accountId);
+      }
       
       return newTransaction;
+    });
+  }
+
+  async settleTransaction(id: number): Promise<AccountTransaction | undefined> {
+    return withDatabaseRetry(async () => {
+      const [transaction] = await db
+        .select()
+        .from(accountTransactions)
+        .where(eq(accountTransactions.id, id));
+      if (!transaction) return undefined;
+
+      // Determine new type
+      let newType = transaction.type;
+      if (transaction.type === 'debt') newType = 'payment_made';
+      if (transaction.type === 'credit') newType = 'payment_received';
+      if (newType === transaction.type) return transaction; // already settled
+
+      const [updated] = await db
+        .update(accountTransactions)
+        .set({ type: newType })
+        .where(eq(accountTransactions.id, id))
+        .returning();
+
+      // Only update balance if accountId exists
+      if (transaction.accountId) {
+        await this.updateAccountBalance(transaction.accountId);
+      }
+      return updated;
     });
   }
 
@@ -214,8 +247,152 @@ export class DatabaseStorage implements IStorage {
       
       if (transaction) {
         await db.delete(accountTransactions).where(eq(accountTransactions.id, id));
-        await this.updateAccountBalance(transaction.accountId);
+        // Only update balance if accountId exists
+        if (transaction.accountId) {
+          await this.updateAccountBalance(transaction.accountId);
+        }
       }
+    });
+  }
+
+  async getPendingTransactions(): Promise<{
+    id: number;
+    type: 'debt' | 'credit';
+    amount: string;
+    paidAmount: string;
+    remainingAmount: string;
+    description: string;
+    transactionDate: Date;
+    accountId: number | null;
+  }[]> {
+    return withDatabaseRetry(async () => {
+      // Get all pending transactions (debt/credit) with their payments
+      const transactions = await db.transaction(async (tx) => {
+        // Get all parent transactions (debt/credit)
+        const parents = await tx
+          .select()
+          .from(accountTransactions)
+          .where(
+            and(
+              or(
+                eq(accountTransactions.type, 'debt'),
+                eq(accountTransactions.type, 'credit')
+              )
+            )
+          );
+
+        // Get all payment transactions (payment_made/payment_received)
+        const payments = await tx
+          .select()
+          .from(accountTransactions)
+          .where(
+            or(
+              eq(accountTransactions.type, 'payment_made'),
+              eq(accountTransactions.type, 'payment_received')
+            )
+          );
+
+        return parents.map(parent => {
+          const relatedPayments = payments.filter(p => p.parentId === parent.id);
+          const paidAmount = relatedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+          const remainingAmount = Math.max(0, Number(parent.amount) - paidAmount);
+          
+          return {
+            id: parent.id,
+            type: parent.type as 'debt' | 'credit',
+            amount: parent.amount,
+            paidAmount: paidAmount.toString(),
+            remainingAmount: remainingAmount.toString(),
+            description: parent.description,
+            transactionDate: parent.transactionDate,
+            accountId: parent.accountId
+          };
+        }).filter(t => Number(t.remainingAmount) > 0); // Only return unpaid/partially paid
+      });
+
+      return transactions;
+    });
+  }
+
+  async getTransactionWithPayments(id: number) {
+    return withDatabaseRetry(async () => {
+      const [transaction] = await db
+        .select()
+        .from(accountTransactions)
+        .where(eq(accountTransactions.id, id));
+
+      if (!transaction) return null;
+
+      const payments = await db
+        .select()
+        .from(accountTransactions)
+        .where(eq(accountTransactions.parentId, id));
+
+      return { transaction, payments };
+    });
+  }
+
+  async partialSettle(
+    parentId: number,
+    amount: number,
+    description: string,
+    transactionDate: Date
+  ): Promise<AccountTransaction> {
+    return withDatabaseRetry(async () => {
+      const parent = await this.getTransactionWithPayments(parentId);
+      if (!parent) {
+        throw new Error('Parent transaction not found');
+      }
+
+      const { transaction: parentTx, payments } = parent;
+      const paidAmount = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const remaining = Number(parentTx.amount) - paidAmount;
+
+      if (amount > remaining) {
+        throw new Error('Payment amount exceeds remaining balance');
+      }
+
+      // Create payment record
+      const paymentType = parentTx.type === 'debt' ? 'payment_made' : 'payment_received';
+      const [payment] = await db
+        .insert(accountTransactions)
+        .values({
+          type: paymentType,
+          amount: amount.toString(),
+          description,
+          transactionDate,
+          parentId: parentTx.id,
+          accountId: parentTx.accountId,
+          projectId: parentTx.projectId,
+          createdAt: new Date(),
+        })
+        .returning();
+
+      // Update parent's account balance if it exists
+      if (parentTx.accountId) {
+        await this.updateAccountBalance(parentTx.accountId);
+      }
+
+      return payment;
+    });
+  }
+
+  async getMonthlySummary(year: number): Promise<{ month: string; income: string; expense: string; net: string; }[]> {
+    return withDatabaseRetry(async () => {
+      const result = await db.execute(sql`SELECT to_char(date_trunc('month', "transactionDate"), 'YYYY-MM') AS month,
+        SUM(CASE WHEN type IN ('credit','payment_received') THEN amount ELSE 0 END) AS income,
+        SUM(CASE WHEN type IN ('debt','payment_made') THEN amount ELSE 0 END) AS expense
+        FROM ${accountTransactions}
+        WHERE EXTRACT(YEAR FROM "transactionDate") = ${year}
+        GROUP BY month
+        ORDER BY month;`);
+
+      return result.rows.map((r: any) => ({
+        month: r.month,
+        income: r.income as string,
+        expense: r.expense as string,
+        net: (Number(r.income) - Number(r.expense)).toString()
+      }));
     });
   }
 

@@ -249,12 +249,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Data after conversion:", data);
       const validatedData = insertTransactionSchema.parse(data);
       const transaction = await storage.createTransaction(validatedData);
-      // Update account balance after creating transaction
-      await storage.updateAccountBalance(validatedData.accountId);
+      // Update account balance after creating transaction if accountId exists
+      if (validatedData.accountId) {
+        await storage.updateAccountBalance(validatedData.accountId);
+      }
       res.json(transaction);
     } catch (error) {
       console.error("Error creating transaction:", error);
       res.status(500).json({ message: "Failed to create transaction" });
+    }
+  });
+
+  // Tahsil / Ödeme onayı
+  app.put("/api/admin/transactions/:id/settle", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.settleTransaction(id);
+      if (!updated) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Settle transaction error:", error);
+      res.status(500).json({ message: "Failed to settle transaction" });
+    }
+  });
+
+  // Finans İstatistik Rotaları
+  app.get("/api/admin/transactions/pending", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const pending = await storage.getPendingTransactions();
+      res.json(pending);
+    } catch (error) {
+      console.error("Error fetching pending transactions:", error);
+      res.status(500).json({ message: "Failed to fetch pending transactions" });
+    }
+  });
+
+  app.post("/api/admin/transactions/partial-settle", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { parentId, amount, description, transactionDate } = req.body;
+      
+      if (!parentId || !amount || !description || !transactionDate) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const payment = await storage.partialSettle(
+        Number(parentId),
+        Number(amount),
+        description,
+        new Date(transactionDate)
+      );
+      
+      res.json(payment);
+    } catch (error: any) {
+      console.error("Error processing partial payment:", error);
+      const status = error.message.includes('not found') ? 404 : 400;
+      res.status(status).json({ message: error.message || "Failed to process payment" });
+    }
+  });
+
+  app.get("/api/admin/stats/monthly", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const year = req.query.year ? parseInt(req.query.year as string) : new Date().getFullYear();
+      const summary = await storage.getMonthlySummary(year);
+      res.json(summary);
+    } catch (error) {
+      console.error("Monthly summary error:", error);
+      res.status(500).json({ message: "Failed to fetch monthly summary" });
     }
   });
 

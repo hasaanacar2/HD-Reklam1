@@ -50,16 +50,29 @@ export const currentAccounts = pgTable("current_accounts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const accountTransactions = pgTable("account_transactions", {
+// First define the table without self-reference
+const accountTransactionsTable = {
   id: serial("id").primaryKey(),
-  accountId: integer("account_id").references(() => currentAccounts.id).notNull(),
+  accountId: integer("account_id").references(() => currentAccounts.id),
   projectId: integer("project_id").references(() => projects.id),
+  parentId: integer("parent_id").references((): any => ({
+    name: "account_transactions",
+    schema: undefined,
+    columnNames: ["id"],
+    columns: [{
+      name: "id",
+      table: { name: "account_transactions", schema: undefined },
+      dataType: "integer"
+    }]
+  })),
   type: text("type").notNull(), // debt, credit, payment_received, payment_made
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: text("description").notNull(),
   transactionDate: timestamp("transaction_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+} as const;
+
+export const accountTransactions = pgTable("account_transactions", accountTransactionsTable);
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
