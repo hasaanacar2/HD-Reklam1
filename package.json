@@ -12,7 +12,9 @@
     "start": "concurrently \"npm run preview --workspace=client\" \"npm run start --workspace=server\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "vite": "^7.0.2"
