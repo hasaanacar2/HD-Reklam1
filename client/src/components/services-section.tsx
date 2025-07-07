@@ -14,21 +14,21 @@ export default function ServicesSection() {
     },
     {
       icon: "fas fa-building",
-      title: "Cephe Giydirme",
-      description: "Bina cephelerini görsel açıdan güçlendiren profesyonel cephe giydirme hizmetleri.",
-      features: ["Mesh Banner", "Branda Giydirme", "Kompozit Panel"]
-    },
-    {
-      icon: "fas fa-car",
-      title: "Araç Giydirme",
-      description: "Araçları mobil reklam aracına dönüştüren profesyonel araç giydirme hizmetleri.",
-      features: ["Tam Araç Giydirme", "Parsiyel Giydirme", "Cam Folyo"]
+      title: "Web Sitesi Hizmetleri",
+      description: "İşletmenize özel profesyonel web sitesi tasarımı ve geliştirme hizmetleri.",
+      features: ["Özel Web Tasarımı", "SEO Optimizasyonu", "Mobil Uyumlu Siteler"]
     },
     {
       icon: "fas fa-map-signs",
       title: "Yönlendirme Tabelası",
       description: "İç ve dış mekan yönlendirme sistemleri ile müşterilerinizi doğru yönlendirin.",
       features: ["İç Mekan Tabelası", "Dış Mekan Tabelası", "Dijital Yönlendirme"]
+    },
+    {
+      icon: "fas fa-hotel",
+      title: "Proje Bazlı Otel Tabela İşleri",
+      description: "Oteller için özel tasarlanmış tabela ve yönlendirme sistemleri ile misafir deneyimini artırın.",
+      features: ["Özel Tasarım Tabelalar", "Yönlendirme Sistemleri", "Dış Mekan Çözümleri"]
     },
     {
       icon: "fas fa-tools",

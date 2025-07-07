@@ -10,25 +10,25 @@ import { AdminLayout } from "@/components/admin/admin-layout";
 import NotFound from "@/pages/not-found";
 import ContentEditor from "@/components/content-editor";
 
-function AdminRoutes() {
-  return (
-    <AdminLayout>
-      <Switch>
-        <Route path="/admin" component={ContentEditor} />
-        <Route path="/admin/content" component={ContentEditor} />
-        <Route path="/admin/finance" component={FinanceDashboard} />
-      </Switch>
-    </AdminLayout>
-  );
-}
-
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/admin-login" component={AdminLogin} />
+      <Route path="/admin/finance">
+        <AdminLayout>
+          <FinanceDashboard />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/content">
+        <AdminLayout>
+          <ContentEditor />
+        </AdminLayout>
+      </Route>
       <Route path="/admin">
-        <AdminRoutes />
+        <AdminLayout>
+          <ContentEditor />
+        </AdminLayout>
       </Route>
       <Route component={NotFound} />
     </Switch>

@@ -90,7 +90,7 @@ export default function ContactSection() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Adresimiz</h3>
-                <p className="text-secondary">Atatürk Mahallesi, Reklam Caddesi No:123<br />İkitelli/İstanbul</p>
+                <p className="text-secondary">Ermenek Mah. Şehit Ali Daniyar Cd. HD Reklam Muratpaşa/ANTALYA</p>
               </div>
             </div>
 
@@ -100,8 +100,7 @@ export default function ContactSection() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Telefon</h3>
-                <p className="text-secondary">+90 555 123 45 67</p>
-                <p className="text-secondary">+90 212 555 67 89</p>
+                <p className="text-secondary">05325518051</p>
               </div>
             </div>
 
@@ -111,8 +110,7 @@ export default function ContactSection() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">E-posta</h3>
-                <p className="text-secondary">info@hdreklam.com</p>
-                <p className="text-secondary">satis@hdreklam.com</p>
+                <p className="text-secondary">hdreklam@gmail.com</p>
               </div>
             </div>
 
@@ -131,7 +129,7 @@ export default function ContactSection() {
               <h3 className="text-xl font-semibold mb-3">Hızlı İletişim</h3>
               <p className="mb-4">WhatsApp üzerinden anında iletişime geçin!</p>
               <a 
-                href="https://wa.me/905551234567?text=Merhaba%20HD%20Reklam,%20tabela%20hizmetleriniz%20hakkında%20bilgi%20almak%20istiyorum." 
+                href="https://wa.me/905325518051?text=Merhaba%20HD%20Reklam,%20tabela%20hizmetleriniz%20hakkında%20bilgi%20almak%20istiyorum." 
                 className="bg-white text-success hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
               >
                 <i className="fab fa-whatsapp mr-2"></i>

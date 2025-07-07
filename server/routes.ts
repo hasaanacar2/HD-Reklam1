@@ -7,9 +7,9 @@ import {
   insertCurrentAccountSchema, 
   insertTransactionSchema 
 } from "@shared/schema";
+import { generateToken, verifyPassword, authenticateAdmin, AuthRequest, hashPassword } from "./auth";
 import { generateSignageDesign, analyzeImageForSignage } from "./ai-service";
 import { storage } from "./storage";
-import { authenticateAdmin, generateToken, verifyPassword, hashPassword, AuthRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Admin login route
@@ -24,21 +24,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For demo purposes, using a simple check
-      // In production, you should store hashed passwords in database
-      if (username === 'admin' && password === 'HDreklam2025') {
-        const token = generateToken(username);
-        res.json({ 
-          success: true, 
-          token,
-          message: "Giriş başarılı." 
-        });
-      } else {
-        res.status(401).json({ 
-          success: false, 
-          message: "Geçersiz kullanıcı adı veya şifre." 
-        });
+      // Fetch user from database
+      const user = await storage.getUserByUsername(username);
+      if (user && user.isAdmin && user.password) {
+        const isValidPassword = await verifyPassword(password, user.password);
+        if (isValidPassword) {
+          const token = generateToken(username);
+          res.json({ 
+            success: true, 
+            token,
+            message: "Giriş başarılı." 
+          });
+          return;
+        }
       }
+      
+      res.status(401).json({ 
+        success: false, 
+        message: "Geçersiz kullanıcı adı veya şifre." 
+      });
     } catch (error) {
       res.status(500).json({ 
         success: false, 
@@ -235,28 +239,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Transaction request body:", req.body);
       const data = { ...req.body };
       
+      // Ensure required fields exist
+      if (!data.type || !data.amount || !data.description) {
+        return res.status(400).json({ 
+          message: "Missing required fields: type, amount, description" 
+        });
+      }
+      
       // Convert types to match schema expectations
       if (data.accountId) {
         data.accountId = typeof data.accountId === 'string' ? parseInt(data.accountId) : data.accountId;
+      } else {
+        data.accountId = null;
       }
+      
+      if (data.projectId) {
+        data.projectId = typeof data.projectId === 'string' ? parseInt(data.projectId) : data.projectId;
+      } else {
+        data.projectId = null;
+      }
+      
+      // parentId should be null for new transactions
+      data.parentId = null;
+      
       if (data.amount !== undefined && data.amount !== null) {
         data.amount = String(data.amount);
       }
+      
       if (data.transactionDate) {
-        data.transactionDate = new Date(data.transactionDate);
+        // Ensure proper date format
+        const date = new Date(data.transactionDate);
+        if (isNaN(date.getTime())) {
+          return res.status(400).json({ message: "Invalid transaction date" });
+        }
+        data.transactionDate = date;
+      } else {
+        data.transactionDate = new Date();
       }
       
       console.log("Data after conversion:", data);
-      const validatedData = insertTransactionSchema.parse(data);
-      const transaction = await storage.createTransaction(validatedData);
-      // Update account balance after creating transaction if accountId exists
-      if (validatedData.accountId) {
-        await storage.updateAccountBalance(validatedData.accountId);
+      
+      try {
+        const validatedData = insertTransactionSchema.parse(data);
+        console.log("Validated data:", validatedData);
+        
+        // Test database connection first
+        console.log("Testing database connection...");
+        await storage.getCurrentAccounts(); // Simple query to test connection
+        console.log("Database connection OK");
+        
+        const transaction = await storage.createTransaction(validatedData);
+        console.log("Transaction created successfully:", transaction);
+        
+        res.json(transaction);
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            message: "Validation failed", 
+            errors: validationError.errors.map(err => ({
+              field: err.path.join('.'),
+              message: err.message,
+              code: err.code
+            }))
+          });
+        }
+        throw validationError;
       }
-      res.json(transaction);
     } catch (error) {
       console.error("Error creating transaction:", error);
-      res.status(500).json({ message: "Failed to create transaction" });
+      res.status(500).json({ 
+        message: "Failed to create transaction",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
@@ -283,6 +338,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching pending transactions:", error);
       res.status(500).json({ message: "Failed to fetch pending transactions" });
+    }
+  });
+
+  app.get("/api/admin/transactions/recent", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const period = req.query.period as string || 'all'; // all, week, month, year, or YYYY-MM
+      const recent = await storage.getRecentTransactions(limit, period);
+      res.json(recent);
+    } catch (error) {
+      console.error("Error fetching recent transactions:", error);
+      res.status(500).json({ message: "Failed to fetch recent transactions" });
     }
   });
 
@@ -317,6 +384,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Monthly summary error:", error);
       res.status(500).json({ message: "Failed to fetch monthly summary" });
+    }
+  });
+
+  // Finance Stats Endpoint
+  app.get("/api/admin/finance/stats", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      const year = new Date().getFullYear();
+      const monthlySummary = await storage.getMonthlySummary(year);
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const period = req.query.period as string || 'month';
+      
+      let selectedMonthData;
+      if (period === 'month') {
+        selectedMonthData = monthlySummary.find(s => s.month === currentMonth) || {
+          income: "0",
+          expense: "0",
+          net: "0",
+          month: currentMonth
+        };
+      } else if (period === 'all') {
+        // Sum up all months for 'all'
+        const totalIncome = monthlySummary.reduce((sum, s) => sum + Number(s.income), 0);
+        const totalExpense = monthlySummary.reduce((sum, s) => sum + Number(s.expense), 0);
+        selectedMonthData = {
+          income: totalIncome.toString(),
+          expense: totalExpense.toString(),
+          net: (totalIncome - totalExpense).toString(),
+          month: 'all'
+        };
+      } else if (period === 'year') {
+        // Sum up for the current year
+        const yearData = monthlySummary.filter(s => s.month.startsWith(year.toString()));
+        const totalIncome = yearData.reduce((sum, s) => sum + Number(s.income), 0);
+        const totalExpense = yearData.reduce((sum, s) => sum + Number(s.expense), 0);
+        selectedMonthData = {
+          income: totalIncome.toString(),
+          expense: totalExpense.toString(),
+          net: (totalIncome - totalExpense).toString(),
+          month: year.toString()
+        };
+      } else if (period === 'week') {
+        // For week, we'll use the current month's data as a placeholder (could be refined)
+        selectedMonthData = monthlySummary.find(s => s.month === currentMonth) || {
+          income: "0",
+          expense: "0",
+          net: "0",
+          month: currentMonth
+        };
+      } else {
+        // Specific month selected (YYYY-MM)
+        selectedMonthData = monthlySummary.find(s => s.month === period) || {
+          income: "0",
+          expense: "0",
+          net: "0",
+          month: period
+        };
+      }
+
+      // Income and expenses are based on completed transactions only
+      // Pending transactions are not included in the net balance calculation
+      res.json({
+        totalReceivables: 0, // Excluded as per user request
+        totalPayables: 0,    // Excluded as per user request
+        monthlyIncome: Number(selectedMonthData.income),
+        monthlyExpenses: Number(selectedMonthData.expense),
+        netBalance: Number(selectedMonthData.income) - Number(selectedMonthData.expense)
+      });
+    } catch (error) {
+      console.error("Finance stats error:", error);
+      res.status(500).json({ message: "Failed to fetch finance stats" });
+    }
+  });
+
+  // Test endpoint for database connection
+  app.get("/api/admin/test", authenticateAdmin, async (req: AuthRequest, res) => {
+    try {
+      console.log("Testing database connection...");
+      const accounts = await storage.getCurrentAccounts();
+      console.log("Found", accounts.length, "accounts");
+      
+      const projects = await storage.getProjects();
+      console.log("Found", projects.length, "projects");
+      
+      res.json({ 
+        message: "Database connection successful",
+        accounts: accounts.length,
+        projects: projects.length
+      });
+    } catch (error) {
+      console.error("Database test error:", error);
+      res.status(500).json({ 
+        message: "Database connection failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

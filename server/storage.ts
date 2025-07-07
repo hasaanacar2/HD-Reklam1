@@ -41,6 +41,7 @@ export interface IStorage {
   
   // Transaction operations
   getAccountTransactions(accountId?: number): Promise<AccountTransaction[]>;
+  getRecentTransactions(limit?: number, period?: string): Promise<AccountTransaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<AccountTransaction>;
   deleteTransaction(id: number): Promise<void>;
   updateAccountBalance(accountId: number): Promise<void>;
@@ -191,15 +192,65 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async createTransaction(transaction: Omit<InsertTransaction, 'id' | 'createdAt'>): Promise<AccountTransaction> {
+  async getRecentTransactions(limit: number = 20, period: string = 'all'): Promise<AccountTransaction[]> {
     return withDatabaseRetry(async () => {
+      if (period === 'all') {
+        return await db
+          .select()
+          .from(accountTransactions)
+          .orderBy(desc(accountTransactions.transactionDate))
+          .limit(limit);
+      }
+
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date | undefined;
+      
+      if (period === 'week') {
+        startDate = new Date(now.setDate(now.getDate() - 7));
+      } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (period === 'year') {
+        startDate = new Date(now.getFullYear(), 0, 1);
+      } else {
+        // Custom period format: YYYY-MM
+        const [year, month] = period.split('-').map(Number);
+        startDate = new Date(year, month - 1, 1);
+        endDate = new Date(year, month, 0, 23, 59, 59);
+      }
+      
+      if (endDate) {
+        return await db
+          .select()
+          .from(accountTransactions)
+          .where(
+            and(
+              sql`"transaction_date" >= ${startDate}`,
+              sql`"transaction_date" <= ${endDate}`
+            )
+          )
+          .orderBy(desc(accountTransactions.transactionDate))
+          .limit(limit);
+      } else {
+        return await db
+          .select()
+          .from(accountTransactions)
+          .where(sql`"transaction_date" >= ${startDate}`)
+          .orderBy(desc(accountTransactions.transactionDate))
+          .limit(limit);
+      }
+    });
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<AccountTransaction> {
+    return withDatabaseRetry(async () => {
+      console.log("Storage createTransaction called with:", transaction);
       const [newTransaction] = await db
         .insert(accountTransactions)
-        .values({
-          ...transaction,
-          createdAt: new Date(),
-        })
+        .values(transaction)
         .returning();
+      
+      console.log("Transaction created:", newTransaction);
       
       // Update account balance if accountId exists
       if (transaction.accountId) {
@@ -379,11 +430,11 @@ export class DatabaseStorage implements IStorage {
 
   async getMonthlySummary(year: number): Promise<{ month: string; income: string; expense: string; net: string; }[]> {
     return withDatabaseRetry(async () => {
-      const result = await db.execute(sql`SELECT to_char(date_trunc('month', "transactionDate"), 'YYYY-MM') AS month,
+      const result = await db.execute(sql`SELECT to_char(date_trunc('month', "transaction_date"), 'YYYY-MM') AS month,
         SUM(CASE WHEN type IN ('credit','payment_received') THEN amount ELSE 0 END) AS income,
         SUM(CASE WHEN type IN ('debt','payment_made') THEN amount ELSE 0 END) AS expense
         FROM ${accountTransactions}
-        WHERE EXTRACT(YEAR FROM "transactionDate") = ${year}
+        WHERE EXTRACT(YEAR FROM "transaction_date") = ${year}
         GROUP BY month
         ORDER BY month;`);
 

@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Calculator, Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Calculator, Check, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -51,6 +52,8 @@ export default function FinanceDashboard() {
     description: '',
     transactionDate: new Date().toISOString().split('T')[0],
   });
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("month"); // Default to current month
+  const [availableMonths, setAvailableMonths] = useState<{ value: string, label: string }[]>([]);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,15 +71,48 @@ export default function FinanceDashboard() {
     'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
   });
 
-  // Fetch finance stats
+  // Fetch available months for selection
+  useEffect(() => {
+    const fetchMonths = async () => {
+      try {
+        const year = new Date().getFullYear();
+        const res = await fetch(`/api/admin/stats/monthly?year=${year}`, {
+          headers: getAuthHeaders()
+        });
+        if (!res.ok) throw new Error('Failed to fetch monthly summary');
+        const summary = await res.json();
+        const months = summary.map((item: { month: string }) => {
+          const [year, month] = item.month.split('-');
+          return {
+            value: item.month,
+            label: new Date(parseInt(year), parseInt(month) - 1).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })
+          };
+        }).reverse();
+        setAvailableMonths(months);
+        // Keep the default as 'month' for current month view
+      } catch (error) {
+        console.error("Failed to fetch available months:", error);
+        toast({
+          title: "Hata",
+          description: "Aylık veriler yüklenemedi.",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchMonths();
+  }, [toast]);
+
+  // Fetch finance stats with selected period
   const { data: financeStats } = useQuery<FinanceStats>({
-    queryKey: ["/api/admin/finance/stats"],
+    queryKey: ["/api/admin/finance/stats", selectedPeriod],
     queryFn: async () => {
       const res = await fetch("/api/admin/finance/stats", {
         headers: getAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to fetch finance stats');
-      return res.json();
+      const stats = await res.json();
+      console.log("Finance Stats:", stats);
+      return stats;
     }
   });
 
@@ -92,11 +128,14 @@ export default function FinanceDashboard() {
     }
   });
 
-  // Fetch recent transactions
+  // Fetch recent transactions with selected period
   const { data: recentTransactions = [], isLoading: recentLoading } = useQuery<Transaction[]>({
-    queryKey: ["/api/admin/transactions/recent"],
+    queryKey: ["/api/admin/transactions/recent", selectedPeriod],
     queryFn: async () => {
-      const res = await fetch("/api/admin/transactions/recent", {
+      const url = selectedPeriod === 'all' 
+        ? "/api/admin/transactions/recent" 
+        : `/api/admin/transactions/recent?period=${selectedPeriod}`;
+      const res = await fetch(url, {
         headers: getAuthHeaders()
       });
       if (!res.ok) throw new Error('Failed to fetch recent transactions');
@@ -107,7 +146,15 @@ export default function FinanceDashboard() {
   // Mutation for partial payment
   const partialPaymentMutation = useMutation({
     mutationFn: async (data: { parentId: number; amount: number; description: string; transactionDate: string }) => {
-      const res = await apiRequest("POST", "/api/admin/transactions/partial-settle", data);
+      const res = await fetch("/api/admin/transactions/partial-settle", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to process payment');
       return await res.json();
     },
     onSuccess: () => {
@@ -176,22 +223,41 @@ export default function FinanceDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">Finans Tablosu</h1>
-          <p className="text-muted-foreground">Finansal durumunuzu ve bekleyen işlemlerinizi yönetin</p>
+          <p className="text-muted-foreground">Gelir ve giderlerinizi yönetin</p>
         </div>
-        <Button onClick={() => setShowTransactionForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yeni İşlem Ekle
-        </Button>
+        <div className="flex gap-2 items-center">
+          <div className="w-64">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-full">
+                <Calendar className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Dönem Seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Zamanlar</SelectItem>
+                <SelectItem value="month">Bu Ay</SelectItem>
+                <SelectItem value="week">Bu Hafta</SelectItem>
+                <SelectItem value="year">Bu Yıl</SelectItem>
+                {availableMonths.map(month => (
+                  <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => setShowTransactionForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Yeni İşlem Ekle
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">📊 Genel Bakış</TabsTrigger>
-          <TabsTrigger value="receivables">💰 Bekleyen Alacaklar</TabsTrigger>
-          <TabsTrigger value="payables">📋 Bekleyen Verecekler</TabsTrigger>
+          <TabsTrigger value="receivables">💰 Bekleyen Gelirler</TabsTrigger>
+          <TabsTrigger value="payables">📋 Bekleyen Giderler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -199,7 +265,7 @@ export default function FinanceDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Toplam Alacaklar</CardTitle>
+                <CardTitle className="text-sm font-medium">Bekleyen Gelirler</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -207,14 +273,14 @@ export default function FinanceDashboard() {
                   {financeStats ? formatCurrency(financeStats.totalReceivables) : '₺0,00'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {pendingReceivables.length} bekleyen işlem
+                  {pendingReceivables.length} bekleyen işlem (hesaba dahil değil)
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Toplam Verecekler</CardTitle>
+                <CardTitle className="text-sm font-medium">Bekleyen Giderler</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -222,7 +288,7 @@ export default function FinanceDashboard() {
                   {financeStats ? formatCurrency(financeStats.totalPayables) : '₺0,00'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {pendingPayables.length} bekleyen işlem
+                  {pendingPayables.length} bekleyen işlem (hesaba dahil değil)
                 </p>
               </CardContent>
             </Card>
@@ -237,7 +303,22 @@ export default function FinanceDashboard() {
                   {financeStats ? formatCurrency(financeStats.monthlyIncome) : '₺0,00'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Bu ay
+                  {selectedPeriod === 'month' ? 'Bu Ay' : selectedPeriod === 'all' ? 'Tüm Zamanlar' : selectedPeriod === 'week' ? 'Bu Hafta' : selectedPeriod === 'year' ? 'Bu Yıl' : new Date(selectedPeriod + '-01').toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Aylık Gider</CardTitle>
+                <TrendingDown className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {financeStats ? formatCurrency(financeStats.monthlyExpenses) : '₺0,00'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedPeriod === 'month' ? 'Bu Ay' : selectedPeriod === 'all' ? 'Tüm Zamanlar' : selectedPeriod === 'week' ? 'Bu Hafta' : selectedPeriod === 'year' ? 'Bu Yıl' : new Date(selectedPeriod + '-01').toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
                 </p>
               </CardContent>
             </Card>
@@ -274,7 +355,7 @@ export default function FinanceDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.slice(0, 5).map((transaction) => (
+                  {recentTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="text-muted-foreground">
                         {new Date(transaction.transactionDate).toLocaleDateString('tr-TR')}
@@ -282,13 +363,13 @@ export default function FinanceDashboard() {
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell>
                         <Badge variant={transaction.type === 'credit' ? 'default' : 'destructive'}>
-                          {transaction.type === 'credit' ? 'Alacak' : 'Verecek'}
+                          {transaction.type === 'credit' ? 'Gelir' : 'Gider'}
                         </Badge>
                       </TableCell>
                       <TableCell className={`text-right font-medium ${
                         transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {formatCurrency(transaction.amount)}
+                        {formatCurrency(parseFloat(transaction.amount))}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -310,7 +391,7 @@ export default function FinanceDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-600" />
-                Bekleyen Alacaklar
+                Bekleyen Gelirler
                 <Badge variant="outline" className="ml-2">
                   {pendingReceivables.length}
                 </Badge>
@@ -331,32 +412,32 @@ export default function FinanceDashboard() {
                   {pendingReceivables.map((tx) => (
                     <TableRow key={tx.id}>
                       <TableCell>{tx.description}</TableCell>
-                      <TableCell className="text-right text-green-600">{formatCurrency(tx.amount)}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(tx.remainingAmount)}</TableCell>
+                      <TableCell className="text-right text-green-600">{formatCurrency(parseFloat(tx.amount))}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(parseFloat(tx.remainingAmount))}</TableCell>
                       <TableCell className="text-right text-muted-foreground">
                         {new Date(tx.transactionDate).toLocaleDateString('tr-TR')}
                       </TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePartialPayment(tx)}
-                        >
-                          Kısmi Tahsil
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleFullPayment(tx)}
-                        >
-                          Tam Tahsil
-                        </Button>
-                      </TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePartialPayment(tx)}
+                      >
+                        Kısmi Ödeme
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleFullPayment(tx)}
+                      >
+                        Tam Ödeme
+                      </Button>
+                    </TableCell>
                     </TableRow>
                   ))}
                   {pendingReceivables.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
-                        Bekleyen alacak bulunmamaktadır
+                        Bekleyen gelir bulunmamaktadır
                       </TableCell>
                     </TableRow>
                   )}
@@ -371,7 +452,7 @@ export default function FinanceDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-red-600" />
-                Bekleyen Verecekler
+                Bekleyen Giderler
                 <Badge variant="outline" className="ml-2">
                   {pendingPayables.length}
                 </Badge>
@@ -392,32 +473,32 @@ export default function FinanceDashboard() {
                   {pendingPayables.map((tx) => (
                     <TableRow key={tx.id}>
                       <TableCell>{tx.description}</TableCell>
-                      <TableCell className="text-right text-red-600">{formatCurrency(tx.amount)}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(tx.remainingAmount)}</TableCell>
+                      <TableCell className="text-right text-red-600">{formatCurrency(parseFloat(tx.amount))}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(parseFloat(tx.remainingAmount))}</TableCell>
                       <TableCell className="text-right text-muted-foreground">
                         {new Date(tx.transactionDate).toLocaleDateString('tr-TR')}
                       </TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePartialPayment(tx)}
-                        >
-                          Kısmi Öde
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleFullPayment(tx)}
-                        >
-                          Tam Öde
-                        </Button>
-                      </TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePartialPayment(tx)}
+                      >
+                        Kısmi Ödeme
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleFullPayment(tx)}
+                      >
+                        Tam Ödeme
+                      </Button>
+                    </TableCell>
                     </TableRow>
                   ))}
                   {pendingPayables.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
-                        Bekleyen verecek bulunmamaktadır
+                        Bekleyen gider bulunmamaktadır
                       </TableCell>
                     </TableRow>
                   )}
@@ -430,8 +511,22 @@ export default function FinanceDashboard() {
 
       {/* Transaction Form Dialog */}
       {showTransactionForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowTransactionForm(false);
+            }
+          }}
+        >
+          <div className="bg-background p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
+            <button
+              onClick={() => setShowTransactionForm(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl font-bold"
+              type="button"
+            >
+              ×
+            </button>
             <TransactionForm onClose={() => setShowTransactionForm(false)} />
           </div>
         </div>
@@ -444,8 +539,8 @@ export default function FinanceDashboard() {
             <DialogTitle>Ödeme Yap</DialogTitle>
             <DialogDescription>
               {selectedTransaction?.type === 'credit' 
-                ? 'Alacak tahsilatı yapıyorsunuz' 
-                : 'Verecek ödemesi yapıyorsunuz'}
+                ? 'Gelir tahsilatı yapıyorsunuz' 
+                : 'Gider ödemesi yapıyorsunuz'}
             </DialogDescription>
           </DialogHeader>
           
@@ -463,7 +558,7 @@ export default function FinanceDashboard() {
               />
               {selectedTransaction && (
                 <p className="text-sm text-muted-foreground">
-                  Kalan tutar: {formatCurrency(selectedTransaction.remainingAmount)}
+                  Kalan tutar: {formatCurrency(parseFloat(selectedTransaction.remainingAmount))}
                 </p>
               )}
             </div>

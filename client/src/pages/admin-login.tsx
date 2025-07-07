@@ -61,25 +61,23 @@ export default function AdminLogin() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı Adı</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="hdreklam2025"
                 required
                 className="thin-border"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="••••••••••••"
                 required
                 className="thin-border"
               />
@@ -92,10 +90,7 @@ export default function AdminLogin() {
               {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>Kullanıcı adı: admin</p>
-            <p>Şifre: HDreklam2025</p>
-          </div>
+          {/* Credentials display removed for security reasons */}
         </CardContent>
       </Card>
     </div>

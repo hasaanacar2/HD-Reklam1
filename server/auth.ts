@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'hd-reklam-admin-secret-key-2025';
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD_HASH = '$2a$10$YourHashedPasswordHere'; // We'll set this properly
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable must be set!');
+}
 
 export interface AuthRequest extends Request {
   user?: {
@@ -16,14 +17,14 @@ export interface AuthRequest extends Request {
 export function generateToken(username: string): string {
   return jwt.sign(
     { username, isAdmin: true },
-    JWT_SECRET,
+    JWT_SECRET as string,
     { expiresIn: '24h' }
   );
 }
 
 export function verifyToken(token: string): { username: string; isAdmin: boolean } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { username: string; isAdmin: boolean };
+    return jwt.verify(token, JWT_SECRET as string) as { username: string; isAdmin: boolean };
   } catch {
     return null;
   }

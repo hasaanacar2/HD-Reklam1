@@ -153,7 +153,7 @@ export default function AISignageOverlay() {
       `Detaylı bilgi alabilir miyim?`
     );
 
-    window.open(`https://wa.me/905551234567?text=${message}`, '_blank');
+    window.open(`https://wa.me/905325518051?text=${message}`, '_blank');
   };
 
   const downloadImage = () => {
@@ -383,7 +383,7 @@ export default function AISignageOverlay() {
                         <Label htmlFor="phone" className="text-sm">Telefon</Label>
                         <Input
                           id="phone"
-                          placeholder="0555 123 45 67"
+                          placeholder="05325518051"
                           value={contactInfo.phone}
                           onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
                           className="thin-border"

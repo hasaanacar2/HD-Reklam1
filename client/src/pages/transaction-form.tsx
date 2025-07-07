@@ -40,27 +40,121 @@ export default function TransactionForm({ onClose }: TransactionFormProps) {
     projectId: '',
   });
 
+  // New account/project forms
+  const [newAccountForm, setNewAccountForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    accountType: 'customer'
+  });
+
+  const [newProjectForm, setNewProjectForm] = useState({
+    name: '',
+    description: '',
+    clientName: '',
+    clientPhone: '',
+    clientEmail: '',
+    projectType: 'signage',
+    status: 'planned',
+    totalAmount: '',
+    paidAmount: '0',
+    startDate: '',
+    endDate: ''
+  });
+
+  const [showNewAccountForm, setShowNewAccountForm] = useState(false);
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+
+  // Auth headers
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+  });
+
   // Fetch accounts and projects
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ['/api/admin/accounts'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/current-accounts');
-      return await res.json();
+      const res = await fetch('/api/admin/accounts', {
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      return res.json();
     }
   });
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ['/api/admin/projects'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/projects');
+      const res = await fetch('/api/admin/projects', {
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Failed to fetch projects');
+      return res.json();
+    }
+  });
+
+  // Create account mutation
+  const createAccount = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch('/api/admin/accounts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to create account');
       return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/accounts'] });
+    }
+  });
+
+  // Create project mutation
+  const createProject = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch('/api/admin/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to create project');
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/projects'] });
     }
   });
 
   // Create transaction mutation
   const createTransaction = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('POST', '/api/admin/transactions', data);
+      const res = await fetch('/api/admin/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.text();
+        console.error('Server response:', res.status, errorData);
+        try {
+          const parsedError = JSON.parse(errorData);
+          throw new Error(parsedError.message || `Server error: ${res.status}`);
+        } catch {
+          throw new Error(`Server error: ${res.status} - ${errorData}`);
+        }
+      }
+      
       return await res.json();
     },
     onSuccess: () => {
@@ -76,6 +170,30 @@ export default function TransactionForm({ onClose }: TransactionFormProps) {
         accountId: '',
         projectId: '',
       });
+      
+      // Reset new forms
+      setNewAccountForm({
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        accountType: 'customer'
+      });
+      setNewProjectForm({
+        name: '',
+        description: '',
+        clientName: '',
+        clientPhone: '',
+        clientEmail: '',
+        projectType: 'signage',
+        status: 'planned',
+        totalAmount: '',
+        paidAmount: '0',
+        startDate: '',
+        endDate: ''
+      });
+      setShowNewAccountForm(false);
+      setShowNewProjectForm(false);
       
       toast({
         title: "İşlem başarıyla eklendi",
@@ -97,7 +215,7 @@ export default function TransactionForm({ onClose }: TransactionFormProps) {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const amount = parseFloat(form.amount);
@@ -110,19 +228,85 @@ export default function TransactionForm({ onClose }: TransactionFormProps) {
       return;
     }
 
-    // Map form type to transaction type
-    let transactionType = form.type;
-    if (form.type === 'expense') transactionType = 'debt';
-    if (form.type === 'income') transactionType = 'credit';
+    let accountId = form.accountId ? parseInt(form.accountId) : null;
+    let projectId = form.projectId ? parseInt(form.projectId) : null;
 
-    createTransaction.mutate({
+    // Create new account if needed
+    if (showNewAccountForm && newAccountForm.name) {
+      if (!newAccountForm.name.trim()) {
+        toast({
+          title: "Hesap adı gerekli",
+          description: "Lütfen hesap adını girin",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      try {
+        const newAccount = await createAccount.mutateAsync(newAccountForm);
+        accountId = newAccount.id;
+        toast({
+          title: "Yeni hesap oluşturuldu",
+          description: `${newAccountForm.name} hesabı başarıyla eklendi`,
+          variant: "default",
+        });
+      } catch (error) {
+        toast({
+          title: "Hesap oluşturulurken hata oluştu",
+          description: "Lütfen tekrar deneyin",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Create new project if needed
+    if (showNewProjectForm && newProjectForm.name) {
+      if (!newProjectForm.name.trim() || !newProjectForm.clientName.trim()) {
+        toast({
+          title: "Proje bilgileri eksik",
+          description: "Lütfen proje adı ve müşteri adını girin",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      try {
+        const newProject = await createProject.mutateAsync(newProjectForm);
+        projectId = newProject.id;
+        toast({
+          title: "Yeni proje oluşturuldu",
+          description: `${newProjectForm.name} projesi başarıyla eklendi`,
+          variant: "default",
+        });
+      } catch (error) {
+        toast({
+          title: "Proje oluşturulurken hata oluştu",
+          description: "Lütfen tekrar deneyin",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Map form type to transaction type
+    let transactionType: string = form.type;
+    if (form.type === 'expense') transactionType = 'payment_made'; // Gider direkt ödeme olarak
+    if (form.type === 'income') transactionType = 'payment_received'; // Gelir direkt tahsilat olarak
+    // debt ve credit bekleyen olarak kalır
+
+    // Create transaction
+    const transactionData = {
       type: transactionType,
       amount: amount.toString(),
       description: form.description,
       transactionDate: form.transactionDate,
-      accountId: form.accountId ? parseInt(form.accountId) : null,
-      projectId: form.projectId ? parseInt(form.projectId) : null,
-    });
+      accountId: accountId,
+      projectId: projectId,
+    };
+    
+    console.log("Sending transaction data:", transactionData);
+    createTransaction.mutate(transactionData);
   };
 
   return (
@@ -190,41 +374,133 @@ export default function TransactionForm({ onClose }: TransactionFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="account">Cari Hesap (Opsiyonel)</Label>
-              <Select 
-                value={form.accountId}
-                onValueChange={(value) => setForm({...form, accountId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Cari hesap seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id.toString()}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="account">Cari Hesap (Opsiyonel)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowNewAccountForm(!showNewAccountForm)}
+                >
+                  {showNewAccountForm ? 'İptal' : 'Yeni Hesap Ekle'}
+                </Button>
+              </div>
+              {!showNewAccountForm ? (
+                <Select 
+                  value={form.accountId}
+                  onValueChange={(value) => setForm({...form, accountId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cari hesap seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-2 p-3 border rounded-md">
+                  <Input
+                    placeholder="Hesap adı"
+                    value={newAccountForm.name}
+                    onChange={(e) => setNewAccountForm({...newAccountForm, name: e.target.value})}
+                  />
+                  <Input
+                    placeholder="Telefon"
+                    value={newAccountForm.phone}
+                    onChange={(e) => setNewAccountForm({...newAccountForm, phone: e.target.value})}
+                  />
+                  <Input
+                    placeholder="E-posta"
+                    value={newAccountForm.email}
+                    onChange={(e) => setNewAccountForm({...newAccountForm, email: e.target.value})}
+                  />
+                  <Select 
+                    value={newAccountForm.accountType}
+                    onValueChange={(value) => setNewAccountForm({...newAccountForm, accountType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer">Müşteri</SelectItem>
+                      <SelectItem value="supplier">Tedarikçi</SelectItem>
+                      <SelectItem value="other">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="project">Proje (Opsiyonel)</Label>
-              <Select 
-                value={form.projectId}
-                onValueChange={(value) => setForm({...form, projectId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Proje seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="project">Proje (Opsiyonel)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowNewProjectForm(!showNewProjectForm)}
+                >
+                  {showNewProjectForm ? 'İptal' : 'Yeni Proje Ekle'}
+                </Button>
+              </div>
+              {!showNewProjectForm ? (
+                <Select 
+                  value={form.projectId}
+                  onValueChange={(value) => setForm({...form, projectId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Proje seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-2 p-3 border rounded-md">
+                  <Input
+                    placeholder="Proje adı"
+                    value={newProjectForm.name}
+                    onChange={(e) => setNewProjectForm({...newProjectForm, name: e.target.value})}
+                  />
+                  <Textarea
+                    placeholder="Proje açıklaması"
+                    value={newProjectForm.description}
+                    onChange={(e) => setNewProjectForm({...newProjectForm, description: e.target.value})}
+                  />
+                  <Input
+                    placeholder="Müşteri adı"
+                    value={newProjectForm.clientName}
+                    onChange={(e) => setNewProjectForm({...newProjectForm, clientName: e.target.value})}
+                  />
+                  <Input
+                    placeholder="Müşteri telefonu"
+                    value={newProjectForm.clientPhone}
+                    onChange={(e) => setNewProjectForm({...newProjectForm, clientPhone: e.target.value})}
+                  />
+                  <Select 
+                    value={newProjectForm.projectType}
+                    onValueChange={(value) => setNewProjectForm({...newProjectForm, projectType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="signage">Tabela</SelectItem>
+                      <SelectItem value="printing">Baskı</SelectItem>
+                      <SelectItem value="design">Tasarım</SelectItem>
+                      <SelectItem value="other">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
 

@@ -170,7 +170,7 @@ export default function Home() {
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   <i className="fab fa-linkedin text-xl"></i>
                 </a>
-                <a href="https://wa.me/905551234567" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://wa.me/905325518051" className="text-gray-400 hover:text-white transition-colors">
                   <i className="fab fa-whatsapp text-xl"></i>
                 </a>
               </div>
@@ -181,9 +181,9 @@ export default function Home() {
               <ul className="space-y-3 text-gray-300">
                 <li><a href="#" className="hover:text-white transition-colors">Işıklı Tabela</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Dijital Baskı</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cephe Giydirme</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Araç Giydirme</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Web Sitesi Hizmetleri</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Yönlendirme Tabelası</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Proje Bazlı Otel Tabela İşleri</a></li>
               </ul>
             </div>
 
@@ -203,15 +203,15 @@ export default function Home() {
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center">
                   <i className="fas fa-map-marker-alt mr-3 text-primary"></i>
-                  İkitelli/İstanbul
+                  Ermenek Mah. Şehit Ali Daniyar Cd. HD Reklam Muratpaşa/ANTALYA
                 </li>
                 <li className="flex items-center">
                   <i className="fas fa-phone mr-3 text-primary"></i>
-                  +90 555 123 45 67
+                  05325518051
                 </li>
                 <li className="flex items-center">
                   <i className="fas fa-envelope mr-3 text-primary"></i>
-                  info@hdreklam.com
+                  hdreklam@gmail.com
                 </li>
                 <li className="flex items-center">
                   <i className="fab fa-whatsapp mr-3 text-success"></i>

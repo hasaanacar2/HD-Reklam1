@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 import { AdminNav } from "./admin-nav";
 
 interface AdminLayoutProps {
@@ -5,6 +7,15 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      setLocation('/admin-login');
+    }
+  }, [setLocation]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="hidden border-r bg-muted/40 md:block">
