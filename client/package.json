@@ -3,32 +3,33 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "npx vite build",
-    "preview": "vite preview"
+    "dev": "parcel serve index.html --open",
+    "build": "parcel build index.html",
+    "preview": "parcel serve index.html --open"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
     "@tanstack/react-query": "^5.17.0",
+    "autoprefixer": "^10.4.16",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "lucide-react": "^0.263.1",
+    "parcel": "^2.12.0",
+    "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.48.2",
     "swiper": "^11.1.0",
     "tailwind-merge": "^2.0.0",
-    "wouter": "^3.0.0",
-    "zod": "^3.22.4",
-    "vite": "^7.0.2",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "wouter": "^3.0.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@parcel/transformer-react-refresh-wrap": "^2.15.4",
+    "@parcel/transformer-typescript-tsc": "^2.15.4",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17"
