@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "parcel serve index.html --open",
-    "build": "parcel build index.html",
+    "build": "node ./node_modules/parcel/bin/parcel.js build index.html",
     "preview": "parcel serve index.html --open"
   },
   "dependencies": {
