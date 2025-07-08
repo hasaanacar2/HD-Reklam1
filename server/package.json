@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
+    "@google/genai": "^1.8.0",
     "express": "^4.19.2"
   }
 }

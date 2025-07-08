@@ -1,14 +1,9 @@
 {
   "extends": "@parcel/config-default",
   "transformers": {
-    "*.css": ["@parcel/transformer-postcss"],
-    "*.{ts,tsx}": ["@parcel/transformer-typescript-tsc", "@parcel/transformer-react-refresh-wrap"]
-  },
-  "plugins": {
-    "@parcel/transformer-postcss": {
-      "postcssOptions": {
-        "config": "./postcss.config.js"
-      }
-    }
+    "*.{ts,tsx}": [
+      "@parcel/transformer-typescript-tsc",
+      "@parcel/transformer-react-refresh-wrap"
+    ]
   }
 }
