@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "parcel serve index.html --open",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "parcel build index.html --no-source-maps --dist-dir dist",
+    "preview": "parcel serve dist/index.html --port 3000"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -24,7 +24,6 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
     "wouter": "^3.0.0",
     "zod": "^3.22.4"
   },
