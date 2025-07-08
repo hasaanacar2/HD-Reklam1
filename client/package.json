@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "parcel serve index.html --open",
-    "build": "parcel build index.html --no-source-maps --dist-dir dist",
-    "preview": "parcel serve dist/index.html --port 3000"
+    "build": "npx parcel build index.html --no-source-maps --dist-dir dist",
+    "preview": "npx parcel serve dist/index.html --port 3000"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -33,9 +33,7 @@
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "wouter": "^3.0.0",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
+    "zod": "^3.22.4",
     "@parcel/transformer-react-refresh-wrap": "^2.15.4",
     "@parcel/transformer-typescript-tsc": "^2.15.4",
     "@types/node": "^20.10.0",

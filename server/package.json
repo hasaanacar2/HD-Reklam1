@@ -5,11 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development tsx index.ts",
-    "build": "echo 'Server build script (isteğe göre güncellenebilir)'",
-    "start": "NODE_ENV=production node dist/index.js"
+    "build": "tsc",
+    "start": "NODE_ENV=production tsx index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.8.0",
-    "express": "^4.19.2"
+    "@neondatabase/serverless": "^1.0.1",
+    "@types/node": "^24.0.11",
+    "bcryptjs": "^3.0.2",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "ws": "^8.18.3"
   }
 }
