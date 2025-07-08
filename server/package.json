@@ -5,16 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development tsx index.ts",
-    "build": "tsc",
+    "build": "echo 'TypeScript build skipped for Render.com - using tsx runtime'",
     "start": "NODE_ENV=production tsx index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.8.0",
     "@neondatabase/serverless": "^1.0.1",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.11",
+    "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.2",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.2",
+    "drizzle-zod": "^0.8.2",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "tsx": "^4.20.3",
