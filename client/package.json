@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npx vite",
-    "build": "npx vite build",
+    "dev": "npx vite --config vite.config.mjs",
+    "build": "npx vite build --config vite.config.mjs",
     "preview": "npx vite preview --port 3000"
   },
   "dependencies": {
