@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "parcel serve index.html --open",
     "build": "vite build",
-    "preview": "parcel serve index.html --open"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
